@@ -1,13 +1,17 @@
-export const API_BASE = 'https://api.haxnation.org/jobs'; 
+export const API_BASE = 'https://api.haxnation.org/jobs';
 
 export async function apiCall(endpoint, method = 'GET', body = null) {
     const options = {
         method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' 
+        credentials: 'include'
     };
 
-    if (body) options.body = JSON.stringify(body);
+    if (body !== null) {
+        // Guard: if the caller accidentally passes an already-stringified body,
+        // don't double-serialize it — use it as-is.
+        options.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
 
     try {
         const res = await fetch(`${API_BASE}${endpoint}`, options);
@@ -17,7 +21,6 @@ export async function apiCall(endpoint, method = 'GET', body = null) {
         if (contentType.includes('application/json')) {
             data = await res.json();
         } else if (!res.ok) {
-            // Non-JSON error response (e.g., HTML error page from CloudFront)
             const text = await res.text();
             throw new Error(text || `HTTP ${res.status}`);
         }
