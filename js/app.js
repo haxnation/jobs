@@ -116,8 +116,11 @@ document.getElementById('login-btn').addEventListener('click', () => {
     window.location.href = `${API_BASE}/auth/login`; 
 });
 
-document.getElementById('logout-btn').addEventListener('click', () => {
-    window.location.href = `${API_BASE}/auth/logout`;
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    await apiCall('/auth/logout', 'POST');
+    currentUser = null;
+    navigate('/');
+    window.location.reload();
 });
 
 document.addEventListener('DOMContentLoaded', router);
