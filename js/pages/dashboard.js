@@ -22,7 +22,7 @@ export async function renderDashboard() {
             
             <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b]">
                 <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Quick Actions</h3>
-                ${(Array.isArray(currentUser.accountType) ? (currentUser.accountType.includes('MANAGER') || currentUser.accountType.includes('ORG')) : (currentUser.accountType === 'MANAGER' || currentUser.accountType === 'ORG')) ? `
+                ${(Array.isArray(currentUser.accountType) ? currentUser.accountType.includes('MANAGER') : currentUser.accountType === 'MANAGER') ? `
                     <a href="/jobs/new" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white hover:border-white transition-colors duration-0">Post a Job</a>
                     <a href="/dashboard/my-jobs" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-colors duration-0">Manage My Jobs</a>
                 ` : `
@@ -32,8 +32,8 @@ export async function renderDashboard() {
             </div>
             
             <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] md:col-span-2 border-dashed">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4 text-[#ff2a2a]"><span class="animate-pulse mr-2">⚠️</span>Developer Options</h3>
-                <p class="font-mono text-xs mb-4">Toggle your account roles dynamically for testing purposes:</p>
+                <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Account Roles</h3>
+                <p class="font-mono text-xs mb-4">Manage your account roles to switch between finding jobs and posting jobs:</p>
                 <div class="flex flex-wrap gap-4" id="role-toggles">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : [currentUser.accountType]).includes('APPLIER') ? 'checked' : ''}>
@@ -42,10 +42,6 @@ export async function renderDashboard() {
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : [currentUser.accountType]).includes('MANAGER') ? 'checked' : ''}>
                         <span class="font-mono text-sm font-bold uppercase">Manager</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="ORG" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : [currentUser.accountType]).includes('ORG') ? 'checked' : ''}>
-                        <span class="font-mono text-sm font-bold uppercase">Org</span>
                     </label>
                 </div>
                 <button id="save-roles-btn" class="mt-4 font-mono text-xs font-bold uppercase tracking-widest bg-black text-white border-2 border-black px-4 py-2 hover:bg-white hover:text-black transition-colors duration-0">
@@ -77,7 +73,7 @@ export function attachDashboardEvents() {
             
             saveRolesBtn.innerText = "SAVING...";
             
-            const res = await apiCall('/users/me', 'PATCH', { accountType: newRoles });
+            const res = await apiCall('/users/me', 'PUT', { accountType: newRoles });
             
             if (res.success || res.status === 200) {
                 window.location.reload();
