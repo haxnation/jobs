@@ -113,7 +113,8 @@ document.addEventListener('click', e => {
 });
 
 document.getElementById('login-btn').addEventListener('click', () => {
-    window.location.href = `${API_BASE}/auth/login`; 
+    const currentPath = window.location.pathname + window.location.search;
+    window.location.href = `${API_BASE}/auth/login?returnTo=${encodeURIComponent(currentPath)}`; 
 });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
