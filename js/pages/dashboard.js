@@ -36,11 +36,11 @@ export async function renderDashboard() {
                 <p class="font-mono text-xs mb-4">Manage your account roles to switch between finding jobs and posting jobs:</p>
                 <div class="flex flex-wrap gap-4" id="role-toggles">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : [currentUser.accountType]).includes('APPLIER') ? 'checked' : ''}>
+                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : (currentUser.accountType ? currentUser.accountType.split(',') : ['APPLIER'])).includes('APPLIER') ? 'checked' : ''}>
                         <span class="font-mono text-sm font-bold uppercase">Applier</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : [currentUser.accountType]).includes('MANAGER') ? 'checked' : ''}>
+                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${(Array.isArray(currentUser.accountType) ? currentUser.accountType : (currentUser.accountType ? currentUser.accountType.split(',') : ['APPLIER'])).includes('MANAGER') ? 'checked' : ''}>
                         <span class="font-mono text-sm font-bold uppercase">Manager</span>
                     </label>
                 </div>
@@ -64,7 +64,7 @@ export function attachDashboardEvents() {
     if (saveRolesBtn) {
         saveRolesBtn.addEventListener('click', async () => {
             const checkboxes = document.querySelectorAll('.role-checkbox');
-            const newRoles = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            const newRoles = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value.trim().toUpperCase());
             
             if (newRoles.length === 0) {
                 alert("Please select at least one role.");
