@@ -3,6 +3,12 @@
  * Intercepts POST/PUT requests to add the required content hash header.
  */
 (function() {
+    // Guard: crypto.subtle is only available in secure contexts (HTTPS/localhost)
+    if (!window.crypto?.subtle) {
+        console.warn("AWS SHA-256 Interceptor: crypto.subtle unavailable (requires HTTPS). Skipping.");
+        return;
+    }
+
     // Helper to calculate SHA-256 hash
     async function getSHA256(body) {
         let buffer;
@@ -15,8 +21,6 @@
         } else if (body instanceof ArrayBuffer) {
             buffer = body;
         } else {
-            // For complex types like FormData, you'd need a more complex serializer.
-            // Defaulting to empty string hash to avoid breaking the request.
             console.warn("Unsupported body type for SHA-256 calculation.");
             buffer = new TextEncoder().encode("");
         }
@@ -31,11 +35,9 @@
     window.fetch = async function(...args) {
         let [resource, config] = args;
 
-        // Check if it's a POST or PUT request
         if (config && ['POST', 'PUT'].includes(config.method?.toUpperCase())) {
             const hash = await getSHA256(config.body);
             
-            // Ensure headers object exists
             config.headers = config.headers || {};
             
             if (config.headers instanceof Headers) {
@@ -49,6 +51,7 @@
     };
 
     // --- 2. Intercept XMLHttpRequest (XHR) ---
+    // Use a synchronous approach: compute hash in open(), apply in send()
     const originalOpen = XMLHttpRequest.prototype.open;
     const originalSend = XMLHttpRequest.prototype.send;
 
@@ -57,11 +60,18 @@
         return originalOpen.apply(this, [method, url, ...rest]);
     };
 
-    XMLHttpRequest.prototype.send = async function(body) {
+    XMLHttpRequest.prototype.send = function(body) {
         if (['POST', 'PUT'].includes(this._method)) {
-            const hash = await getSHA256(body);
-            // This header must be set after open() but before send()
-            this.setRequestHeader('x-amz-content-sha256', hash);
+            // For XHR, compute hash asynchronously then send
+            const xhr = this;
+            getSHA256(body).then(hash => {
+                xhr.setRequestHeader('x-amz-content-sha256', hash);
+                originalSend.call(xhr, body);
+            }).catch(() => {
+                // Fallback: send without hash rather than breaking the request
+                originalSend.call(xhr, body);
+            });
+            return; // Don't call originalSend synchronously
         }
         return originalSend.apply(this, [body]);
     };

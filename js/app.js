@@ -47,6 +47,16 @@ async function router() {
             return;
         }
 
+        // /jobs/create must be checked BEFORE /jobs/:id
+        if (path === '/jobs/create') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderJobCreate, attachJobCreateEvents } = await import('./pages/job-create.js');
+            app.innerHTML = await renderJobCreate();
+            attachJobCreateEvents();
+            return;
+        }
+
         if (path.startsWith('/jobs/')) {
             showLoading();
             const jobId = path.split('/jobs/')[1];
@@ -57,10 +67,8 @@ async function router() {
         }
 
         if (path === '/dashboard') {
-            if (!currentUser) {
-                navigate('/');
-                return;
-            }
+            if (!currentUser) { navigate('/'); return; }
+            if (currentUser.onboarded === false) { navigate('/onboarding'); return; }
             showLoading();
             const { renderDashboard, attachDashboardEvents } = await import('./pages/dashboard.js');
             app.innerHTML = await renderDashboard();
@@ -68,11 +76,53 @@ async function router() {
             return;
         }
 
+        if (path === '/onboarding') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderOnboarding, attachOnboardingEvents } = await import('./pages/onboarding.js');
+            app.innerHTML = await renderOnboarding();
+            attachOnboardingEvents();
+            return;
+        }
+
+        if (path === '/my-jobs') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderMyJobs, attachMyJobsEvents } = await import('./pages/my-jobs.js');
+            app.innerHTML = await renderMyJobs();
+            attachMyJobsEvents();
+            return;
+        }
+
+        if (path === '/my-applications') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderMyApplications, attachMyApplicationsEvents } = await import('./pages/my-applications.js');
+            app.innerHTML = await renderMyApplications();
+            attachMyApplicationsEvents();
+            return;
+        }
+
+        if (path === '/pricing') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderPricing, attachPricingEvents } = await import('./pages/pricing.js');
+            app.innerHTML = await renderPricing();
+            attachPricingEvents();
+            return;
+        }
+
+        if (path === '/analytics') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderAnalytics, attachAnalyticsEvents } = await import('./pages/analytics.js');
+            app.innerHTML = await renderAnalytics();
+            attachAnalyticsEvents();
+            return;
+        }
+
         if (path.startsWith('/kanban/')) {
-            if (!currentUser) {
-                navigate('/');
-                return;
-            }
+            if (!currentUser) { navigate('/'); return; }
             showLoading();
             const jobId = path.split('/kanban/')[1];
             const { renderKanban, attachKanbanEvents } = await import('./pages/kanban.js');
