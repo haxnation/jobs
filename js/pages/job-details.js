@@ -22,6 +22,10 @@ export function attachJobDetailsEvents(jobId) {
         const res = await apiCall(`/jobs/${jobId}`);
         if (res.success && res.data) {
             const job = res.data;
+
+            // Build custom questions markup
+            const questionsHtml = buildQuestionsHtml(job.customQuestions);
+
             content.innerHTML = `
                 <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter mb-6 border-b-2 border-black pb-2">${job.title}</h1>
                 <div class="flex flex-wrap gap-4 font-mono text-xs font-bold uppercase mb-8 pb-6 border-b-2 border-black">
@@ -41,7 +45,8 @@ export function attachJobDetailsEvents(jobId) {
                 </div>` : ''}
                 <div class="border-2 border-black bg-[#fafafa] p-6 mt-8 shadow-[4px_4px_0_0_#0b0b0b]">
                     ${job.jobUrl ? `<p class="font-mono text-[10px] text-gray-500 uppercase mb-4">Share: <span class="select-all">${job.jobUrl}</span></p>` : ''}
-                    <button id="apply-btn" class="font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-8 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75">
+                    ${questionsHtml}
+                    <button id="apply-btn" class="font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-8 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75 ${questionsHtml ? 'mt-6 w-full' : ''}">
                         Apply Now
                     </button>
                     <p id="apply-status" class="mt-3 font-mono text-xs hidden"></p>
@@ -53,12 +58,21 @@ export function attachJobDetailsEvents(jobId) {
             const applyStatus = document.getElementById('apply-status');
             if (applyBtn) {
                 applyBtn.addEventListener('click', async () => {
+                    // Collect and validate custom question answers
+                    const { customAnswers, error } = collectAnswers(job.customQuestions);
+                    if (error) {
+                        applyStatus.textContent = error;
+                        applyStatus.className = 'mt-3 font-mono text-xs font-bold text-red-600';
+                        applyStatus.classList.remove('hidden');
+                        return;
+                    }
+
                     applyBtn.disabled = true;
                     applyBtn.innerText = 'SUBMITTING...';
-                    
-                    const applyRes = await apiCall(`/jobs/${jobId}/apply`, 'POST');
+
+                    const applyRes = await apiCall(`/jobs/${jobId}/apply`, 'POST', { customAnswers });
                     applyStatus.classList.remove('hidden');
-                    
+
                     if (applyRes.success) {
                         applyStatus.textContent = '✓ Application submitted successfully!';
                         applyStatus.className = 'mt-3 font-mono text-xs font-bold text-green-700';
@@ -76,4 +90,117 @@ export function attachJobDetailsEvents(jobId) {
         }
     }
     loadJob();
+}
+
+// ─── Custom Questions Helpers ─────────────────────────────────────────────────
+
+/**
+ * Render HTML for custom questions. Returns an empty string if there are none.
+ */
+function buildQuestionsHtml(questions) {
+    if (!questions?.length) return '';
+
+    const fields = questions.map(q => {
+        const requiredMark = q.required ? '<span class="text-red-600 ml-0.5">*</span>' : '';
+        const label = `<label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">${q.question}${requiredMark}</label>`;
+
+        let input = '';
+        switch (q.type) {
+            case 'short_text':
+                input = `<input
+                    data-question-id="${q.id}"
+                    data-question-type="short_text"
+                    type="text"
+                    class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                    placeholder="Your answer…"
+                >`;
+                break;
+
+            case 'long_text':
+                input = `<textarea
+                    data-question-id="${q.id}"
+                    data-question-type="long_text"
+                    rows="4"
+                    class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] resize-y"
+                    placeholder="Your answer…"
+                ></textarea>`;
+                break;
+
+            case 'yes_no':
+                input = `<div class="flex gap-6 font-mono text-sm" data-question-id="${q.id}" data-question-type="yes_no">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="q_${q.id}" value="yes" class="accent-black"> Yes
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="q_${q.id}" value="no" class="accent-black"> No
+                    </label>
+                </div>`;
+                break;
+
+            case 'multiple_choice':
+                input = `<div class="flex flex-col gap-2 font-mono text-sm" data-question-id="${q.id}" data-question-type="multiple_choice">
+                    ${(q.options || []).map(opt => `
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="q_${q.id}" value="${escapeHtml(opt)}" class="accent-black">
+                        ${escapeHtml(opt)}
+                    </label>`).join('')}
+                </div>`;
+                break;
+
+            default:
+                input = '';
+        }
+
+        return `<div class="mb-5">${label}${input}</div>`;
+    }).join('');
+
+    return `
+        <div id="custom-questions" class="mb-6 border-t-2 border-black pt-6">
+            <h3 class="font-mono text-xs font-bold uppercase tracking-widest mb-5">Application Questions</h3>
+            ${fields}
+        </div>
+    `;
+}
+
+/**
+ * Walk the rendered question fields and collect answers.
+ * Returns { customAnswers, error } — error is a string if validation fails.
+ */
+function collectAnswers(questions) {
+    if (!questions?.length) return { customAnswers: [], error: null };
+
+    const customAnswers = [];
+
+    for (const q of questions) {
+        let answer = null;
+
+        if (q.type === 'short_text') {
+            const el = document.querySelector(`input[data-question-id="${q.id}"]`);
+            answer = el?.value?.trim() || null;
+        } else if (q.type === 'long_text') {
+            const el = document.querySelector(`textarea[data-question-id="${q.id}"]`);
+            answer = el?.value?.trim() || null;
+        } else if (q.type === 'yes_no' || q.type === 'multiple_choice') {
+            const checked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+            answer = checked?.value || null;
+        }
+
+        if (q.required && !answer) {
+            return { customAnswers: null, error: `Please answer: "${q.question}"` };
+        }
+
+        if (answer !== null) {
+            customAnswers.push({ questionId: q.id, answer });
+        }
+    }
+
+    return { customAnswers, error: null };
+}
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
