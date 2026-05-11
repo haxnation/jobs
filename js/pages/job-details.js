@@ -40,6 +40,7 @@ export function attachJobDetailsEvents(jobId) {
                     </div>
                 </div>` : ''}
                 <div class="border-2 border-black bg-[#fafafa] p-6 mt-8 shadow-[4px_4px_0_0_#0b0b0b]">
+                    ${job.jobUrl ? `<p class="font-mono text-[10px] text-gray-500 uppercase mb-4">Share: <span class="select-all">${job.jobUrl}</span></p>` : ''}
                     <button id="apply-btn" class="font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-8 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75">
                         Apply Now
                     </button>

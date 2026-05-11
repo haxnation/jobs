@@ -20,7 +20,7 @@ export async function renderJobCreate() {
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">Location</label>
+                            <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">Location *</label>
                             <input id="job-location" type="text" placeholder="e.g. Mumbai, India" class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]">
                         </div>
                         <div>
@@ -62,9 +62,10 @@ export function attachJobCreateEvents() {
         btn.addEventListener('click', async () => {
             const title = document.getElementById('job-title')?.value?.trim();
             const description = document.getElementById('job-description')?.value?.trim();
+            const location = document.getElementById('job-location')?.value?.trim();
 
-            if (!title || !description) {
-                status.textContent = 'Title and description are required.';
+            if (!title || !description || !location) {
+                status.textContent = 'Title, description and location are required.';
                 status.className = 'mt-3 font-mono text-xs font-bold text-red-600';
                 status.classList.remove('hidden');
                 return;
@@ -73,7 +74,7 @@ export function attachJobCreateEvents() {
             const payload = {
                 title,
                 description,
-                location: document.getElementById('job-location')?.value?.trim() || '',
+                location,
                 locationType: document.getElementById('job-location-type')?.value || 'remote',
                 experienceMin: parseInt(document.getElementById('job-exp-min')?.value) || 0,
                 skills: (document.getElementById('job-skills')?.value || '').split(',').map(s => s.trim()).filter(Boolean),

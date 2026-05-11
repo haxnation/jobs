@@ -21,9 +21,10 @@ export function attachJobsEvents() {
         const container = document.getElementById('jobs-container');
         const res = await apiCall('/jobs');
         
-        // Backend returns a flat array, not { jobs: [...] }
-        if (res.success && Array.isArray(res.data)) {
-            if (res.data.length === 0) {
+        // Backend returns { items: [...], nextCursor }
+        const jobs = res.data?.items;
+        if (res.success && Array.isArray(jobs)) {
+            if (jobs.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full py-16 text-center border-2 border-black bg-white shadow-[4px_4px_0_0_#0b0b0b]">
                         <p class="font-mono text-sm font-bold uppercase tracking-widest text-black">No Openings Available</p>
@@ -31,7 +32,7 @@ export function attachJobsEvents() {
                 return;
             }
 
-            container.innerHTML = res.data.map(job => `
+            container.innerHTML = jobs.map(job => `
                 <a href="/jobs/${job.jobId}" class="nav-link bg-white border-2 border-black p-6 rounded-none shadow-[6px_6px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-all duration-75 flex flex-col cursor-pointer group">
                     <div class="flex justify-between items-start mb-4 border-b-2 border-black group-hover:border-white pb-2 gap-2">
                         <h3 class="font-black text-2xl uppercase tracking-tighter">${job.title}</h3>
