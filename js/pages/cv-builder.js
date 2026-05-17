@@ -299,16 +299,36 @@ async function importPdf(file) {
 
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
+        
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            const pageText = content.items.map(item => item.str).join(' ');
+            
+            // Reconstruct lines by grouping text items vertically and tracking carriage returns
+            let pageText = '';
+            let lastItem = null;
+            for (const item of content.items) {
+                if (!item.str.trim()) continue;
+                
+                if (lastItem) {
+                    const yDiff = Math.abs(item.transform[5] - lastItem.transform[5]);
+                    const xDiff = item.transform[4] - lastItem.transform[4];
+                    // If vertical difference is noticeable or x resets sharply to the left
+                    if (yDiff > 4 || xDiff < -20) {
+                        pageText += '\n';
+                    } else {
+                        pageText += ' ';
+                    }
+                }
+                pageText += item.str.trim();
+                lastItem = item;
+            }
             fullText += pageText + '\n';
         }
 
         // Heuristic parsing
         const lines = fullText.split('\n').map(l => l.trim()).filter(Boolean);
-        const parsed = { personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '' }, education: [], experience: [], skills: [] };
+        const parsed = { personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '' }, education: [], experience: [], skills: [], customSections: [] };
 
         // Extract email
         const emailMatch = fullText.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
@@ -338,15 +358,40 @@ async function importPdf(file) {
             summary: /^(summary|objective|profile|professional\s*summary|about)/i
         };
 
-        let currentSection = null;
+        let currentSectionType = null;
+        let currentCustomSection = null;
         let sectionLines = { experience: [], education: [], skills: [], summary: [] };
 
         for (const line of lines.slice(1)) {
             let matched = false;
             for (const [section, regex] of Object.entries(sectionKeywords)) {
-                if (regex.test(line)) { currentSection = section; matched = true; break; }
+                if (regex.test(line)) { 
+                    currentSectionType = section; 
+                    currentCustomSection = null;
+                    matched = true; 
+                    break; 
+                }
             }
-            if (!matched && currentSection) sectionLines[currentSection].push(line);
+            
+            // Detect arbitrary custom sections (ALL CAPS, short line, not predefined)
+            if (!matched && !currentSectionType && line.length > 2 && line.length < 40 && line === line.toUpperCase()) {
+                currentSectionType = 'custom';
+                currentCustomSection = { title: line, items: [] };
+                parsed.customSections.push(currentCustomSection);
+                matched = true;
+            }
+
+            if (!matched) {
+                if (currentSectionType && currentSectionType !== 'custom') {
+                    sectionLines[currentSectionType].push(line);
+                } else if (currentSectionType === 'custom' && currentCustomSection) {
+                    if (currentCustomSection.items.length === 0) {
+                        currentCustomSection.items.push({ title: '', subtitle: '', date: '', description: line });
+                    } else {
+                        currentCustomSection.items[0].description += (currentCustomSection.items[0].description ? '\n' : '') + line;
+                    }
+                }
+            }
         }
 
         if (sectionLines.summary.length) {
@@ -358,47 +403,91 @@ async function importPdf(file) {
             parsed.skills = skillText.split(/[,;•·|]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 40);
         }
 
-        // Basic experience/education block splitting (by date patterns)
-        const datePattern = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\b.*\d{4}/i;
+        // Advanced date pattern matcher
+        const datePattern = /(\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}|\b\d{1,2}\/\d{4}|\b(?:19|20)\d{2}\s*[-–—]\s*(?:19|20)\d{2}|\b(?:19|20)\d{2}\s*[-–—to]+\s*(?:present|current|now|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}))/i;
 
         if (sectionLines.experience.length) {
             let block = { company: '', title: '', location: '', startDate: '', endDate: '', description: '' };
             let descParts = [];
             for (const line of sectionLines.experience) {
-                if (datePattern.test(line) && (block.title || block.company)) {
-                    block.description = descParts.join(' ');
-                    parsed.experience.push({ ...block });
-                    block = { company: '', title: '', location: '', startDate: '', endDate: '', description: '' };
-                    descParts = [];
+                const hasDate = datePattern.test(line);
+                
+                if (hasDate) {
+                    if (descParts.length > 0 || (block.title && block.company)) {
+                        block.description = descParts.join('\n');
+                        parsed.experience.push({ ...block });
+                        block = { company: '', title: '', location: '', startDate: '', endDate: '', description: '' };
+                        descParts = [];
+                    }
+                    
+                    const rangeMatch = line.match(/^(.*?)((\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\b\d{1,2}\/|\b(?:19|20)\d{2}).*)/i);
+                    if (rangeMatch) {
+                        const titlePart = rangeMatch[1].trim();
+                        const datePart = rangeMatch[2].trim();
+                        if (titlePart) {
+                            if (!block.title) block.title = titlePart;
+                            else if (!block.company) block.company = titlePart;
+                        }
+                        const dates = datePart.split(/[-–—]| to /i);
+                        block.startDate = dates[0]?.trim() || '';
+                        block.endDate = dates[1]?.trim() || '';
+                    } else {
+                        block.startDate = line;
+                    }
+                } else {
+                    if (!block.title) block.title = line;
+                    else if (!block.company) block.company = line;
+                    else descParts.push(line);
                 }
-                if (!block.title && !datePattern.test(line)) { block.title = line; }
-                else if (!block.company && !datePattern.test(line) && block.title) { block.company = line; }
-                else if (datePattern.test(line)) {
-                    const parts = line.split(/[-–—]/);
-                    block.startDate = parts[0]?.trim() || '';
-                    block.endDate = parts[1]?.trim() || '';
-                } else { descParts.push(line); }
             }
-            block.description = descParts.join(' ');
+            block.description = descParts.join('\n');
             if (block.title || block.company) parsed.experience.push(block);
         }
 
         if (sectionLines.education.length) {
             let block = emptyEdu();
+            let descParts = [];
             for (const line of sectionLines.education) {
-                if (!block.school) { block.school = line; }
-                else if (!block.degree) { block.degree = line; }
-                else if (datePattern.test(line)) {
-                    const parts = line.split(/[-–—]/);
-                    block.startDate = parts[0]?.trim() || '';
-                    block.endDate = parts[1]?.trim() || '';
+                const hasDate = datePattern.test(line);
+                if (hasDate) {
+                    if (descParts.length > 0 || (block.school && block.degree)) {
+                        block.description = descParts.join('\n');
+                        parsed.education.push({ ...block });
+                        block = emptyEdu();
+                        descParts = [];
+                    }
+                    
+                    const rangeMatch = line.match(/^(.*?)((\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\b\d{1,2}\/|\b(?:19|20)\d{2}).*)/i);
+                    if (rangeMatch) {
+                        const titlePart = rangeMatch[1].trim();
+                        const datePart = rangeMatch[2].trim();
+                        if (titlePart) {
+                            if (!block.school) block.school = titlePart;
+                            else if (!block.degree) block.degree = titlePart;
+                        }
+                        const dates = datePart.split(/[-–—]| to /i);
+                        block.startDate = dates[0]?.trim() || '';
+                        block.endDate = dates[1]?.trim() || '';
+                    } else {
+                        block.startDate = line;
+                    }
+                } else {
+                    if (!block.school) block.school = line;
+                    else if (!block.degree) block.degree = line;
+                    else descParts.push(line);
                 }
             }
+            block.description = descParts.join('\n');
             if (block.school) parsed.education.push(block);
         }
 
-        // Preserve any custom sections from existing data if not overwritten
-        parsed.customSections = cvData.customSections || [];
+        // Merge existing custom sections if any, but don't overwrite the ones we just extracted
+        const existingCustomTitles = parsed.customSections.map(s => s.title.toLowerCase());
+        (cvData.customSections || []).forEach(sec => {
+            if (!existingCustomTitles.includes(sec.title.toLowerCase())) {
+                parsed.customSections.push(sec);
+            }
+        });
         
         cvData = parsed;
         showStatus('✓ PDF parsed! Review and save your data.', true);
