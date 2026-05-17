@@ -5,17 +5,23 @@ let cvData = {
     personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '' },
     education: [],
     experience: [],
-    skills: []
+    skills: [],
+    customSections: []
 };
 
 function emptyEdu() { return { school: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', description: '' }; }
 function emptyExp() { return { company: '', title: '', location: '', startDate: '', endDate: '', description: '' }; }
+function emptyCustomItem() { return { title: '', subtitle: '', date: '', description: '' }; }
+function emptyCustomSection() { return { title: 'New Section', items: [emptyCustomItem()] }; }
 
-export async function renderCvBuilder() {
-    // Load existing CV
-    const res = await apiCall('/cv');
-    if (res.success && res.data?.cv) {
-        cvData = { ...cvData, ...res.data.cv };
+export async function renderCvBuilder(skipFetch = false) {
+    // Load existing CV if not skipping
+    if (!skipFetch) {
+        const res = await apiCall('/cv');
+        if (res.success && res.data?.cv) {
+            cvData = { ...cvData, ...res.data.cv };
+            if (!cvData.customSections) cvData.customSections = [];
+        }
     }
 
     return `
@@ -82,6 +88,12 @@ export async function renderCvBuilder() {
                 <button id="add-skill-btn" class="font-mono text-xs font-bold uppercase bg-black text-white border-2 border-black px-4 py-2 hover:bg-[#5ce1e6] hover:text-black transition-colors duration-0">Add</button>
             </div>
         </div>
+
+        <!-- Custom Sections (Custom Columns) -->
+        <div id="custom-sections-container">
+            ${(cvData.customSections || []).map((sec, sIdx) => customSectionBlock(sec, sIdx)).join('')}
+        </div>
+        <button id="add-custom-section-btn" class="mb-8 font-mono text-xs font-bold uppercase bg-white text-black border-2 border-black px-4 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">+ Add Custom Section</button>
     `;
 }
 
@@ -120,6 +132,35 @@ function expBlock(e, i) {
     </div>`;
 }
 
+function customSectionBlock(sec, sIdx) {
+    return `
+        <div class="custom-section bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6" data-sidx="${sIdx}">
+            <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
+                <input class="custom-sec-title font-bold uppercase tracking-widest text-lg border-none focus:outline-none focus:border-b-2 focus:border-[#5ce1e6] bg-transparent" value="${esc(sec.title)}" placeholder="Section Title">
+                <div class="flex gap-2">
+                    <button class="add-custom-item font-mono text-xs font-bold uppercase bg-black text-white border-2 border-black px-3 py-1 hover:bg-[#5ce1e6] hover:text-black transition-colors duration-0" data-sidx="${sIdx}">+ Add Item</button>
+                    <button class="remove-custom-section font-mono text-xs font-bold text-[#ff2a2a] uppercase border-2 border-[#ff2a2a] px-3 py-1 hover:bg-[#ff2a2a] hover:text-white bg-white" data-sidx="${sIdx}">Remove Section</button>
+                </div>
+            </div>
+            <div class="custom-items-list" data-sidx="${sIdx}">
+                ${sec.items.map((item, iIdx) => customItemBlock(item, sIdx, iIdx)).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function customItemBlock(item, sIdx, iIdx) {
+    return `<div class="custom-item border-2 border-dashed border-gray-400 p-4 mb-3" data-sidx="${sIdx}" data-iidx="${iIdx}">
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Item #${iIdx+1}</span><button class="remove-custom-item font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-sidx="${sIdx}" data-iidx="${iIdx}">Remove</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Title</label><input class="ci-title w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.title)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Subtitle</label><input class="ci-subtitle w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.subtitle)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Date / Details</label><input class="ci-date w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.date)}"></div>
+        </div>
+        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="ci-desc w-full border-2 border-black p-2 font-mono text-sm" rows="2">${esc(item.description)}</textarea></div>
+    </div>`;
+}
+
 function gatherFormData() {
     cvData.personalInfo = {
         name: document.getElementById('cv-name')?.value || '',
@@ -146,6 +187,15 @@ function gatherFormData() {
         startDate: el.querySelector('.exp-start')?.value || '',
         endDate: el.querySelector('.exp-end')?.value || '',
         description: el.querySelector('.exp-desc')?.value || ''
+    }));
+    cvData.customSections = Array.from(document.querySelectorAll('.custom-section')).map(sec => ({
+        title: sec.querySelector('.custom-sec-title')?.value || '',
+        items: Array.from(sec.querySelectorAll('.custom-item')).map(item => ({
+            title: item.querySelector('.ci-title')?.value || '',
+            subtitle: item.querySelector('.ci-subtitle')?.value || '',
+            date: item.querySelector('.ci-date')?.value || '',
+            description: item.querySelector('.ci-desc')?.value || ''
+        }))
     }));
     // skills are managed via add/remove, already in cvData
 }
@@ -215,9 +265,23 @@ async function exportPdf() {
         });
     }
 
-    if (cvData.skills.length) {
+    if (cvData.skills && cvData.skills.length) {
         addText('SKILLS', 11, true); addLine();
         addText(cvData.skills.join('  •  '), 9, false);
+        y += 2;
+    }
+
+    if (cvData.customSections && cvData.customSections.length) {
+        cvData.customSections.forEach(sec => {
+            if (!sec.title) return;
+            addText(sec.title.toUpperCase(), 11, true); addLine();
+            sec.items.forEach(item => {
+                addText(`${item.title}${item.subtitle ? ' — ' + item.subtitle : ''}`, 10, true);
+                if (item.date) addText(item.date, 8, false);
+                if (item.description) addText(item.description, 9, false, 4);
+                y += 2;
+            });
+        });
     }
 
     doc.save(`${(p.name || 'resume').replace(/\s+/g, '_')}_CV.pdf`);
@@ -333,12 +397,15 @@ async function importPdf(file) {
             if (block.school) parsed.education.push(block);
         }
 
+        // Preserve any custom sections from existing data if not overwritten
+        parsed.customSections = cvData.customSections || [];
+        
         cvData = parsed;
         showStatus('✓ PDF parsed! Review and save your data.', true);
-        // Re-render form with parsed data
+        // Re-render form with parsed data, passing true to skip fetching from backend
         const app = document.getElementById('app');
         const { renderCvBuilder, attachCvBuilderEvents } = await import('./cv-builder.js');
-        app.innerHTML = await renderCvBuilder();
+        app.innerHTML = await renderCvBuilder(true);
         attachCvBuilderEvents();
     } catch (err) {
         console.error('PDF parse error:', err);
@@ -404,6 +471,16 @@ export function attachCvBuilderEvents() {
     document.getElementById('add-skill-btn')?.addEventListener('click', addSkill);
     document.getElementById('skill-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } });
 
+    // Custom Sections
+    document.getElementById('add-custom-section-btn')?.addEventListener('click', () => {
+        gatherFormData();
+        if (!cvData.customSections) cvData.customSections = [];
+        cvData.customSections.push(emptyCustomSection());
+        const list = document.getElementById('custom-sections-container');
+        list.innerHTML = cvData.customSections.map((s, i) => customSectionBlock(s, i)).join('');
+        attachRemoveHandlers();
+    });
+
     attachRemoveHandlers();
 }
 
@@ -428,6 +505,36 @@ function attachRemoveHandlers() {
         btn.addEventListener('click', () => {
             cvData.skills.splice(parseInt(btn.dataset.idx), 1);
             renderSkillTags();
+        });
+    });
+
+    // Custom Section Handlers
+    document.querySelectorAll('.add-custom-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gatherFormData();
+            const sIdx = parseInt(btn.dataset.sidx);
+            cvData.customSections[sIdx].items.push(emptyCustomItem());
+            document.getElementById('custom-sections-container').innerHTML = cvData.customSections.map((s, i) => customSectionBlock(s, i)).join('');
+            attachRemoveHandlers();
+        });
+    });
+    document.querySelectorAll('.remove-custom-section').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gatherFormData();
+            const sIdx = parseInt(btn.dataset.sidx);
+            cvData.customSections.splice(sIdx, 1);
+            document.getElementById('custom-sections-container').innerHTML = cvData.customSections.map((s, i) => customSectionBlock(s, i)).join('');
+            attachRemoveHandlers();
+        });
+    });
+    document.querySelectorAll('.remove-custom-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gatherFormData();
+            const sIdx = parseInt(btn.dataset.sidx);
+            const iIdx = parseInt(btn.dataset.iidx);
+            cvData.customSections[sIdx].items.splice(iIdx, 1);
+            document.getElementById('custom-sections-container').innerHTML = cvData.customSections.map((s, i) => customSectionBlock(s, i)).join('');
+            attachRemoveHandlers();
         });
     });
 }
