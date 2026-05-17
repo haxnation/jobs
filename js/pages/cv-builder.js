@@ -292,13 +292,18 @@ async function exportPdf() {
 async function importPdf(file) {
     showStatus('Parsing PDF with OpenResume library...', true);
     try {
-        // Dynamically import the OpenResume PDF parser library from esm.sh
+        // Dynamically import the OpenResume PDF parser library from esm.sh.
+        // This also internally loads pdfjs-dist at a specific version — we must
+        // match that exact version when setting the worker URL.
         const { parseResumeFromPdf } = await import('https://esm.sh/@prolaxu/open-resume-pdf-parser@0.1.2');
-        
-        // Ensure pdf.js worker is properly configured for the library by using the exact internal URL esm.sh resolves
-        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@^5.4.449?target=es2022');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@5.4.449/build/pdf.worker.mjs?target=es2022';
-        window.pdfjsLib = pdfjsLib;
+
+        // Import pdfjs-dist at the EXACT same version the open-resume library
+        // depends on (5.4.449). Do NOT use semver ranges (^) in esm.sh URLs —
+        // they are treated literally and produce malformed requests.
+        // The workerSrc version must exactly match this import version, otherwise
+        // pdfjs throws: "The API version X does not match the Worker version Y".
+        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@5.4.449/build/pdf.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@5.4.449/build/pdf.worker.mjs';
 
         const url = URL.createObjectURL(file);
         const resume = await parseResumeFromPdf(url);
@@ -390,9 +395,10 @@ async function importPdf(file) {
         
         cvData = parsed;
         showStatus('✓ PDF parsed using OpenResume library!', true);
-        // Re-render form with parsed data, passing true to skip fetching from backend
+        // Re-render form with parsed data, passing true to skip fetching from backend.
+        // renderCvBuilder and attachCvBuilderEvents are already in scope — no need
+        // to self-import this module (circular dynamic imports cause subtle failures).
         const app = document.getElementById('app');
-        const { renderCvBuilder, attachCvBuilderEvents } = await import('./cv-builder.js');
         app.innerHTML = await renderCvBuilder(true);
         attachCvBuilderEvents();
     } catch (err) {
