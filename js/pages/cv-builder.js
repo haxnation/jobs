@@ -295,8 +295,8 @@ async function importPdf(file) {
         // Dynamically import the OpenResume PDF parser library from esm.sh
         const { parseResumeFromPdf } = await import('https://esm.sh/@prolaxu/open-resume-pdf-parser@0.1.2');
         
-        // Ensure pdf.js worker is properly configured for the library
-        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@5.4.449?target=es2022');
+        // Ensure pdf.js worker is properly configured for the library by using the exact internal URL esm.sh resolves
+        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@^5.4.449?target=es2022');
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@5.4.449/build/pdf.worker.mjs?target=es2022';
         window.pdfjsLib = pdfjsLib;
 
