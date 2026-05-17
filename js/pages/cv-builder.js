@@ -288,200 +288,99 @@ async function exportPdf() {
     showStatus('✓ PDF exported successfully!', true);
 }
 
-// --- PDF Import & Parse (heuristic, inspired by OpenResume) ---
+// --- PDF Import & Parse (Using OpenResume Library) ---
 async function importPdf(file) {
-    showStatus('Parsing PDF...', true);
+    showStatus('Parsing PDF with OpenResume library...', true);
     try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdfjsLib = window.pdfjsLib;
-        if (!pdfjsLib) { showStatus('pdf.js not loaded yet. Please wait.', false); return; }
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
+        // Dynamically import the OpenResume PDF parser library from esm.sh
+        const { parseResumeFromPdf } = await import('https://esm.sh/@prolaxu/open-resume-pdf-parser@0.1.2');
         
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            
-            // Reconstruct lines by grouping text items vertically and tracking carriage returns
-            let pageText = '';
-            let lastItem = null;
-            for (const item of content.items) {
-                if (!item.str.trim()) continue;
-                
-                if (lastItem) {
-                    const yDiff = Math.abs(item.transform[5] - lastItem.transform[5]);
-                    const xDiff = item.transform[4] - lastItem.transform[4];
-                    // If vertical difference is noticeable or x resets sharply to the left
-                    if (yDiff > 4 || xDiff < -20) {
-                        pageText += '\n';
-                    } else {
-                        pageText += ' ';
-                    }
-                }
-                pageText += item.str.trim();
-                lastItem = item;
-            }
-            fullText += pageText + '\n';
-        }
+        // Ensure pdf.js worker is properly configured for the library
+        const pdfjsLib = await import('https://esm.sh/pdfjs-dist@5.4.449?target=es2022');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@5.4.449/build/pdf.worker.mjs?target=es2022';
+        window.pdfjsLib = pdfjsLib;
 
-        // Heuristic parsing
-        const lines = fullText.split('\n').map(l => l.trim()).filter(Boolean);
+        const url = URL.createObjectURL(file);
+        const resume = await parseResumeFromPdf(url);
+        URL.revokeObjectURL(url);
+        
+        console.log("OpenResume Extracted:", resume);
+
         const parsed = { personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '' }, education: [], experience: [], skills: [], customSections: [] };
 
-        // Extract email
-        const emailMatch = fullText.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
-        if (emailMatch) parsed.personalInfo.email = emailMatch[0];
-
-        // Extract phone
-        const phoneMatch = fullText.match(/(\+?\d[\d\s\-().]{7,}\d)/);
-        if (phoneMatch) parsed.personalInfo.phone = phoneMatch[0].trim();
-
-        // Extract LinkedIn
-        const linkedinMatch = fullText.match(/linkedin\.com\/in\/[\w-]+/i);
-        if (linkedinMatch) parsed.personalInfo.linkedin = 'https://' + linkedinMatch[0];
-
-        // Name is usually the first significant line
-        if (lines.length) {
-            const firstLine = lines[0].replace(/[|•·,]/g, '').trim();
-            if (firstLine.length < 60 && !firstLine.includes('@') && !/\d{3}/.test(firstLine)) {
-                parsed.personalInfo.name = firstLine;
-            }
+        if (resume.profile) {
+            parsed.personalInfo.name = resume.profile.name || '';
+            parsed.personalInfo.email = resume.profile.email || '';
+            parsed.personalInfo.phone = resume.profile.phone || '';
+            parsed.personalInfo.location = resume.profile.location || '';
+            parsed.personalInfo.linkedin = resume.profile.url || '';
+            parsed.personalInfo.summary = resume.profile.summary || '';
         }
 
-        // Section detection via keywords
-        const sectionKeywords = {
-            experience: /^(work\s*experience|experience|employment|professional\s*experience|work\s*history)/i,
-            education: /^(education|academic|qualifications)/i,
-            skills: /^(skills|technical\s*skills|core\s*competencies|competencies|technologies)/i,
-            summary: /^(summary|objective|profile|professional\s*summary|about)/i
-        };
-
-        let currentSectionType = null;
-        let currentCustomSection = null;
-        let sectionLines = { experience: [], education: [], skills: [], summary: [] };
-
-        for (const line of lines.slice(1)) {
-            let matched = false;
-            for (const [section, regex] of Object.entries(sectionKeywords)) {
-                if (regex.test(line)) { 
-                    currentSectionType = section; 
-                    currentCustomSection = null;
-                    matched = true; 
-                    break; 
-                }
-            }
-            
-            // Detect arbitrary custom sections (ALL CAPS, short line, not predefined)
-            if (!matched && !currentSectionType && line.length > 2 && line.length < 40 && line === line.toUpperCase()) {
-                currentSectionType = 'custom';
-                currentCustomSection = { title: line, items: [] };
-                parsed.customSections.push(currentCustomSection);
-                matched = true;
-            }
-
-            if (!matched) {
-                if (currentSectionType && currentSectionType !== 'custom') {
-                    sectionLines[currentSectionType].push(line);
-                } else if (currentSectionType === 'custom' && currentCustomSection) {
-                    if (currentCustomSection.items.length === 0) {
-                        currentCustomSection.items.push({ title: '', subtitle: '', date: '', description: line });
-                    } else {
-                        currentCustomSection.items[0].description += (currentCustomSection.items[0].description ? '\n' : '') + line;
-                    }
-                }
-            }
+        if (resume.educations) {
+            parsed.education = resume.educations.map(e => {
+                const dates = (e.date || '').split(/[-–—]| to /i);
+                return {
+                    school: e.school || '',
+                    degree: e.degree || '',
+                    field: '', 
+                    gpa: e.gpa || '',
+                    startDate: dates[0]?.trim() || '',
+                    endDate: dates[1]?.trim() || '',
+                    description: (e.descriptions || []).join('\n')
+                };
+            });
         }
 
-        if (sectionLines.summary.length) {
-            parsed.personalInfo.summary = sectionLines.summary.join(' ').substring(0, 500);
+        if (resume.workExperiences) {
+            parsed.experience = resume.workExperiences.map(e => {
+                const dates = (e.date || '').split(/[-–—]| to /i);
+                return {
+                    company: e.company || '',
+                    title: e.jobTitle || '',
+                    location: '',
+                    startDate: dates[0]?.trim() || '',
+                    endDate: dates[1]?.trim() || '',
+                    description: (e.descriptions || []).join('\n')
+                };
+            });
         }
 
-        if (sectionLines.skills.length) {
-            const skillText = sectionLines.skills.join(' ');
-            parsed.skills = skillText.split(/[,;•·|]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 40);
-        }
-
-        // Advanced date pattern matcher
-        const datePattern = /(\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}|\b\d{1,2}\/\d{4}|\b(?:19|20)\d{2}\s*[-–—]\s*(?:19|20)\d{2}|\b(?:19|20)\d{2}\s*[-–—to]+\s*(?:present|current|now|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{4}))/i;
-
-        if (sectionLines.experience.length) {
-            let block = { company: '', title: '', location: '', startDate: '', endDate: '', description: '' };
-            let descParts = [];
-            for (const line of sectionLines.experience) {
-                const hasDate = datePattern.test(line);
-                
-                if (hasDate) {
-                    if (descParts.length > 0 || (block.title && block.company)) {
-                        block.description = descParts.join('\n');
-                        parsed.experience.push({ ...block });
-                        block = { company: '', title: '', location: '', startDate: '', endDate: '', description: '' };
-                        descParts = [];
-                    }
-                    
-                    const rangeMatch = line.match(/^(.*?)((\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\b\d{1,2}\/|\b(?:19|20)\d{2}).*)/i);
-                    if (rangeMatch) {
-                        const titlePart = rangeMatch[1].trim();
-                        const datePart = rangeMatch[2].trim();
-                        if (titlePart) {
-                            if (!block.title) block.title = titlePart;
-                            else if (!block.company) block.company = titlePart;
-                        }
-                        const dates = datePart.split(/[-–—]| to /i);
-                        block.startDate = dates[0]?.trim() || '';
-                        block.endDate = dates[1]?.trim() || '';
-                    } else {
-                        block.startDate = line;
-                    }
-                } else {
-                    if (!block.title) block.title = line;
-                    else if (!block.company) block.company = line;
-                    else descParts.push(line);
-                }
+        if (resume.skills && resume.skills.featuredSkills) {
+            parsed.skills = resume.skills.featuredSkills.map(s => s.skill).filter(Boolean);
+            if (resume.skills.descriptions && resume.skills.descriptions.length > 0) {
+                const otherSkills = resume.skills.descriptions.join(', ').split(/[,•·|;]/).map(s => s.trim()).filter(Boolean);
+                parsed.skills = [...new Set([...parsed.skills, ...otherSkills])].slice(0, 30);
             }
-            block.description = descParts.join('\n');
-            if (block.title || block.company) parsed.experience.push(block);
+        }
+        
+        if (resume.projects && resume.projects.length > 0) {
+            parsed.customSections.push({
+                title: 'PROJECTS',
+                items: resume.projects.map(p => ({
+                    title: p.project || '',
+                    subtitle: '',
+                    date: p.date || '',
+                    description: (p.descriptions || []).join('\n')
+                }))
+            });
+        }
+        
+        if (resume.certifications && resume.certifications.length > 0) {
+            parsed.customSections.push({
+                title: 'CERTIFICATIONS',
+                items: [{ title: '', subtitle: '', date: '', description: resume.certifications.join('\n') }]
+            });
+        }
+        
+        if (resume.languages && resume.languages.length > 0) {
+            parsed.customSections.push({
+                title: 'LANGUAGES',
+                items: [{ title: '', subtitle: '', date: '', description: resume.languages.join(', ') }]
+            });
         }
 
-        if (sectionLines.education.length) {
-            let block = emptyEdu();
-            let descParts = [];
-            for (const line of sectionLines.education) {
-                const hasDate = datePattern.test(line);
-                if (hasDate) {
-                    if (descParts.length > 0 || (block.school && block.degree)) {
-                        block.description = descParts.join('\n');
-                        parsed.education.push({ ...block });
-                        block = emptyEdu();
-                        descParts = [];
-                    }
-                    
-                    const rangeMatch = line.match(/^(.*?)((\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\b\d{1,2}\/|\b(?:19|20)\d{2}).*)/i);
-                    if (rangeMatch) {
-                        const titlePart = rangeMatch[1].trim();
-                        const datePart = rangeMatch[2].trim();
-                        if (titlePart) {
-                            if (!block.school) block.school = titlePart;
-                            else if (!block.degree) block.degree = titlePart;
-                        }
-                        const dates = datePart.split(/[-–—]| to /i);
-                        block.startDate = dates[0]?.trim() || '';
-                        block.endDate = dates[1]?.trim() || '';
-                    } else {
-                        block.startDate = line;
-                    }
-                } else {
-                    if (!block.school) block.school = line;
-                    else if (!block.degree) block.degree = line;
-                    else descParts.push(line);
-                }
-            }
-            block.description = descParts.join('\n');
-            if (block.school) parsed.education.push(block);
-        }
-
-        // Merge existing custom sections if any, but don't overwrite the ones we just extracted
+        // Preserve any custom sections from existing data if not overwritten
         const existingCustomTitles = parsed.customSections.map(s => s.title.toLowerCase());
         (cvData.customSections || []).forEach(sec => {
             if (!existingCustomTitles.includes(sec.title.toLowerCase())) {
@@ -490,7 +389,7 @@ async function importPdf(file) {
         });
         
         cvData = parsed;
-        showStatus('✓ PDF parsed! Review and save your data.', true);
+        showStatus('✓ PDF parsed using OpenResume library!', true);
         // Re-render form with parsed data, passing true to skip fetching from backend
         const app = document.getElementById('app');
         const { renderCvBuilder, attachCvBuilderEvents } = await import('./cv-builder.js');
