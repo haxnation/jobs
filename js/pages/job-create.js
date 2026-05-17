@@ -38,6 +38,36 @@ export async function renderJobCreate() {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">
+                                Company Name
+                            </label>
+                            <input
+                                id="job-company"
+                                type="text"
+                                placeholder="e.g. Google, Acme Corp"
+                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">
+                                Your Role
+                            </label>
+                            <select
+                                id="job-manager-role"
+                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] bg-white"
+                            >
+                                <option value="hiring">🏢 Hiring Directly</option>
+                                <option value="referring">🤝 Referring</option>
+                            </select>
+                            <p class="font-mono text-[10px] text-gray-500 mt-1 uppercase">
+                                Are you the hiring manager or referring someone?
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">
                                 Location *
                             </label>
                             <input
@@ -363,6 +393,12 @@ export function attachJobCreateEvents() {
                 location,
                 locationType:
                     document.getElementById('job-location-type')?.value || 'remote',
+
+                clientCompany:
+                    document.getElementById('job-company')?.value?.trim() || null,
+
+                managerRole:
+                    document.getElementById('job-manager-role')?.value || 'hiring',
 
                 experienceMin:
                     parseInt(document.getElementById('job-exp-min')?.value) || 0,

@@ -20,7 +20,7 @@ export function attachJobsEvents() {
     async function loadJobs() {
         const container = document.getElementById('jobs-container');
         const res = await apiCall('/jobs');
-        
+
         // Backend returns { items: [...], nextCursor }
         const jobs = res.data?.items;
         if (res.success && Array.isArray(jobs)) {
@@ -32,20 +32,28 @@ export function attachJobsEvents() {
                 return;
             }
 
-            container.innerHTML = jobs.map(job => `
+            container.innerHTML = jobs.map(job => {
+                const roleBadge = job.managerRole === 'referring'
+                    ? '<span class="border-2 border-black px-2 py-0.5 font-mono text-[10px] font-bold uppercase bg-[#ffd700] text-black shadow-[2px_2px_0_0_#0b0b0b] group-hover:shadow-[2px_2px_0_0_#ffd700] group-hover:border-white">🤝 Referral</span>'
+                    : '<span class="border-2 border-black px-2 py-0.5 font-mono text-[10px] font-bold uppercase bg-[#5ce1e6] text-black shadow-[2px_2px_0_0_#0b0b0b] group-hover:shadow-[2px_2px_0_0_#5ce1e6] group-hover:border-white">🏢 Hiring</span>';
+
+                return `
                 <a href="/jobs/${job.jobId}" class="nav-link bg-white border-2 border-black p-6 rounded-none shadow-[6px_6px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-all duration-75 flex flex-col cursor-pointer group">
-                    <div class="flex justify-between items-start mb-4 border-b-2 border-black group-hover:border-white pb-2 gap-2">
+                    <div class="flex justify-between items-start mb-3 border-b-2 border-black group-hover:border-white pb-2 gap-2">
                         <h3 class="font-black text-2xl uppercase tracking-tighter">${job.title}</h3>
                         <span class="border-2 border-black px-2 py-1 font-mono text-[10px] whitespace-nowrap font-bold uppercase shadow-[2px_2px_0_0_#0b0b0b] bg-[#5ce1e6] text-black group-hover:shadow-[2px_2px_0_0_#5ce1e6] group-hover:border-white">
                             ${job.location || 'Remote'}
                         </span>
                     </div>
-                    <p class="font-sans text-sm flex-1 mb-4">${job.companyName || job.locationType || 'Hiring Company'}</p>
-                    <div class="font-mono text-[10px] uppercase font-bold tracking-widest text-gray-500 group-hover:text-gray-300">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="font-mono text-sm font-bold">${job.clientCompany || 'Company'}</span>
+                        ${roleBadge}
+                    </div>
+                    <div class="font-mono text-[10px] uppercase font-bold tracking-widest text-gray-500 group-hover:text-gray-300 mt-auto">
                         View Details →
                     </div>
-                </a>
-            `).join('');
+                </a>`;
+            }).join('');
         } else {
             container.innerHTML = `
                 <div class="col-span-full py-16 text-center border-2 border-black bg-white shadow-[4px_4px_0_0_#0b0b0b]">

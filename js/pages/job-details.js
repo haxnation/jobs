@@ -26,11 +26,17 @@ export function attachJobDetailsEvents(jobId) {
             // Build custom questions markup
             const questionsHtml = buildQuestionsHtml(job.customQuestions);
 
+            const roleBadge = job.managerRole === 'referring'
+                ? '<span class="border-2 border-black px-3 py-1 font-mono text-xs font-bold uppercase bg-[#ffd700] text-black shadow-[2px_2px_0_0_#0b0b0b]">🤝 Referral</span>'
+                : '<span class="border-2 border-black px-3 py-1 font-mono text-xs font-bold uppercase bg-[#5ce1e6] text-black shadow-[2px_2px_0_0_#0b0b0b]">🏢 Hiring Directly</span>';
+
             content.innerHTML = `
-                <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter mb-6 border-b-2 border-black pb-2">${job.title}</h1>
-                <div class="flex flex-wrap gap-4 font-mono text-xs font-bold uppercase mb-8 pb-6 border-b-2 border-black">
-                    <span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.companyName || job.locationType || 'Company'}</span>
+                <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter mb-4 border-b-2 border-black pb-2">${job.title}</h1>
+                ${job.clientCompany ? `<p class="font-mono text-lg font-bold mb-2">${escapeHtml(job.clientCompany)}</p>` : ''}
+                <div class="flex flex-wrap gap-3 font-mono text-xs font-bold uppercase mb-8 pb-6 border-b-2 border-black items-center">
+                    ${roleBadge}
                     <span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.location || 'Remote'}</span>
+                    <span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.locationType || 'remote'}</span>
                     ${job.experienceMin ? `<span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.experienceMin}+ yrs exp</span>` : ''}
                 </div>
                 <div class="text-black font-sans leading-relaxed mb-8 text-lg">

@@ -131,6 +131,15 @@ async function router() {
             return;
         }
 
+        if (path === '/cv-builder') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading();
+            const { renderCvBuilder, attachCvBuilderEvents } = await import('./pages/cv-builder.js');
+            app.innerHTML = await renderCvBuilder();
+            attachCvBuilderEvents();
+            return;
+        }
+
         app.innerHTML = `
             <div class="text-center mt-20 border-4 border-black bg-white p-8 shadow-[8px_8px_0_0_#ff2a2a] max-w-md mx-auto">
                 <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-black pb-2 mb-6">404 - NOT FOUND<span class="inline-block w-3 h-[1em] bg-[#ff2a2a] animate-pulse align-middle ml-1"></span></h2>
