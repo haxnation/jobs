@@ -261,12 +261,19 @@ async function exportPdf() {
         y += 6;
     }
 
-    /** Section heading: UPPERCASE bold + thin rule. */
+    /** Section heading: UPPERCASE bold with rule on the same baseline. */
     function sectionHead(title) {
         y += 4;
         ensureSpace(18);
-        text(title.toUpperCase(), 10, 'bold');
-        rule();
+        doc.setFont('times', 'bold');
+        doc.setFontSize(10);
+        const titleWidth = doc.getTextWidth(title.toUpperCase());
+        doc.text(title.toUpperCase(), M, y);
+        // Rule on same baseline, starting just after the title text
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.line(M + titleWidth + 4, y, PW - M, y);
+        y += 10 * LH;
     }
 
     /** Render multi-line description as bullet points (•). */
