@@ -268,7 +268,7 @@ async function exportPdf() {
         doc.setFont('times', 'bold');
         doc.setFontSize(10);
         doc.text(title.toUpperCase(), M, y);
-        y += 10 * LH;
+        y += 2 * LH;
         // Rule 1pt below the text baseline
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
