@@ -7,9 +7,9 @@ export async function renderKanban(jobId) {
                 Applicant Pipeline <span class="text-gray-500 text-lg">Job #${jobId}</span>
             </h1>
         </div>
-        <div id="kanban-board" class="flex gap-4 overflow-x-auto pb-4" style="min-height: 60vh;">
+        <div id="kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
             ${['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'].map(status => `
-                <div class="flex-shrink-0 w-80 bg-[#fafafa] border-2 border-black shadow-[4px_4px_0_0_#0b0b0b] flex flex-col" data-status="${status}">
+                <div class="bg-[#fafafa] border-2 border-black shadow-[4px_4px_0_0_#0b0b0b] flex flex-col" data-status="${status}">
                     <div class="bg-black text-white p-3 font-bold uppercase tracking-widest border-b-2 border-black flex justify-between items-center">
                         <span>${status}</span>
                         <span class="kanban-count text-[10px] bg-[#5ce1e6] text-black px-2 py-0.5 border border-black">0</span>
@@ -19,6 +19,14 @@ export async function renderKanban(jobId) {
                     </div>
                 </div>
             `).join('')}
+        </div>
+
+        <!-- Application Details Modal -->
+        <div id="app-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white border-4 border-black shadow-[8px_8px_0_0_#0b0b0b] p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+                <button id="close-modal-btn" class="absolute top-4 right-4 font-black text-2xl hover:text-[#ff2a2a] transition-colors">&times;</button>
+                <div id="app-modal-content"></div>
+            </div>
         </div>
     `;
 }
@@ -58,14 +66,24 @@ export function attachKanbanEvents(jobId) {
             const countEl = column.closest('[data-status]').querySelector('.kanban-count');
             if (countEl) countEl.textContent = apps.length;
 
-            column.innerHTML = apps.map(app => `
-                <div class="bg-white border-2 border-black p-3 shadow-[2px_2px_0_0_#0b0b0b] cursor-grab hover:shadow-[1px_1px_0_0_#0b0b0b] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-75 kanban-card" 
-                     draggable="true" data-app-id="${app.applicationId}" data-job-id="${jobId}">
-                    <p class="font-mono text-xs font-bold uppercase mb-1">Applicant: ${app.applicantId?.substring(0, 8) || 'Unknown'}...</p>
+            column.innerHTML = apps.map(app => {
+                const nameStr = app.applicantName && app.applicantName !== 'Unknown' ? ` - ${app.applicantName}` : '';
+                return `
+                <div class="bg-white border-2 border-black p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card" data-app-id="${app.applicationId}" data-job-id="${jobId}">
+                    <p class="font-mono text-xs font-bold uppercase">ID: ${app.applicantId?.substring(0, 8)}${nameStr}</p>
                     ${app.aiScore ? `<p class="font-mono text-[10px] text-gray-600">AI Score: <span class="font-bold text-black">${app.aiScore}</span></p>` : ''}
-                    <p class="font-mono text-[10px] text-gray-400 mt-1">${new Date(app.createdAt).toLocaleDateString()}</p>
+                    <p class="font-mono text-[10px] text-gray-400">${new Date(app.createdAt).toLocaleDateString()}</p>
+                    
+                    <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300">
+                        <select class="status-shift font-mono text-[10px] uppercase border-2 border-black p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}">
+                            ${['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'].map(s => 
+                                `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
+                            ).join('')}
+                        </select>
+                        <button class="view-app-btn font-mono text-[10px] uppercase bg-black text-white border-2 border-black px-2 py-1 hover:bg-[#5ce1e6] hover:text-black transition-colors" data-app-id="${app.applicationId}">View</button>
+                    </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Update counts for empty columns
@@ -77,56 +95,110 @@ export function attachKanbanEvents(jobId) {
             }
         });
 
-        // --- Drag and Drop ---
-        setupDragAndDrop(jobId);
+        attachCardEvents();
     }
 
-    function setupDragAndDrop(jobId) {
-        const cards = document.querySelectorAll('.kanban-card');
-        const columns = document.querySelectorAll('.kanban-column');
-
-        cards.forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', JSON.stringify({
-                    appId: card.dataset.appId,
-                    jobId: card.dataset.jobId
-                }));
-                card.classList.add('opacity-50');
-            });
-            card.addEventListener('dragend', () => {
-                card.classList.remove('opacity-50');
-            });
-        });
-
-        columns.forEach(column => {
-            column.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                column.classList.add('bg-[#5ce1e6]/20');
-            });
-            column.addEventListener('dragleave', () => {
-                column.classList.remove('bg-[#5ce1e6]/20');
-            });
-            column.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                column.classList.remove('bg-[#5ce1e6]/20');
-
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                const newStatus = column.dataset.status;
-
-                const res = await apiCall(`/applications/${data.appId}/status`, 'PATCH', {
-                    jobId: data.jobId,
+    function attachCardEvents() {
+        document.querySelectorAll('.status-shift').forEach(select => {
+            select.addEventListener('change', async (e) => {
+                const appId = e.target.dataset.appId;
+                const newStatus = e.target.value;
+                e.target.disabled = true;
+                const res = await apiCall(`/applications/${appId}/status`, 'PATCH', {
+                    jobId,
                     status: newStatus
                 });
-
                 if (res.success) {
-                    // Reload the board to reflect changes
                     loadApplications();
                 } else {
                     alert(res.error || 'Failed to update status');
+                    e.target.disabled = false;
+                }
+            });
+        });
+
+        document.querySelectorAll('.view-app-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const appId = e.target.dataset.appId;
+                const modal = document.getElementById('app-modal');
+                const content = document.getElementById('app-modal-content');
+                
+                modal.classList.remove('hidden');
+                content.innerHTML = '<p class="font-mono animate-pulse uppercase tracking-widest">Fetching candidate details...</p>';
+                
+                const res = await apiCall(`/jobs/${jobId}/applications/${appId}`);
+                if (res.success) {
+                    const app = res.data;
+                    const cv = app.cvData || {};
+                    const p = cv.personalInfo || {};
+                    
+                    content.innerHTML = `
+                        <h2 class="text-3xl font-black uppercase border-b-4 border-black pb-2 mb-6">Candidate Details</h2>
+                        
+                        <div class="mb-6 bg-[#fafafa] border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                            <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">Personal Info</h3>
+                            <p class="font-mono text-sm mb-1"><strong>Name:</strong> ${p.name || 'N/A'}</p>
+                            <p class="font-mono text-sm mb-1"><strong>Email:</strong> ${p.email || 'N/A'}</p>
+                            <p class="font-mono text-sm mb-1"><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
+                            <p class="font-mono text-sm mb-1"><strong>Location:</strong> ${p.location || 'N/A'}</p>
+                            ${app.aiScore ? `<p class="font-mono text-sm mt-2 text-[#5ce1e6] bg-black inline-block px-2 py-1"><strong>AI Score:</strong> ${app.aiScore}</p>` : ''}
+                        </div>
+
+                        ${app.customAnswers && app.customAnswers.length ? `
+                        <div class="mb-6 bg-white border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                            <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">Q&A</h3>
+                            <ul class="space-y-3 font-mono text-sm">
+                                ${app.customAnswers.map(ans => `
+                                    <li class="border-l-4 border-[#5ce1e6] pl-3">
+                                        <div class="font-bold mb-1">Q: ${ans.questionId}</div>
+                                        <div class="text-gray-700">A: ${ans.answer}</div>
+                                    </li>`).join('')}
+                            </ul>
+                        </div>` : ''}
+
+                        ${cv.experience && cv.experience.length ? `
+                        <div class="mb-6 bg-white border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                            <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">Experience</h3>
+                            <div class="space-y-4">
+                                ${cv.experience.map(e => `
+                                    <div class="border-l-4 border-black pl-3 font-mono text-sm">
+                                        <p class="font-bold uppercase text-base">${e.title} at ${e.company}</p>
+                                        <p class="text-xs text-gray-500 mb-1">${e.startDate} - ${e.endDate}</p>
+                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap">${e.description}</p>` : ''}
+                                    </div>`).join('')}
+                            </div>
+                        </div>` : ''}
+
+                        ${cv.education && cv.education.length ? `
+                        <div class="mb-6 bg-white border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                            <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">Education</h3>
+                            <div class="space-y-4">
+                                ${cv.education.map(e => `
+                                    <div class="border-l-4 border-black pl-3 font-mono text-sm">
+                                        <p class="font-bold uppercase text-base">${e.degree} in ${e.field}</p>
+                                        <p class="text-sm">${e.school}</p>
+                                        <p class="text-xs text-gray-500">${e.startDate} - ${e.endDate}</p>
+                                    </div>`).join('')}
+                            </div>
+                        </div>` : ''}
+                    `;
+                } else {
+                    content.innerHTML = `<p class="font-mono font-bold text-[#ff2a2a] uppercase border-2 border-[#ff2a2a] p-4 text-center">Failed to load details: ${res.error}</p>`;
                 }
             });
         });
     }
+
+    document.getElementById('close-modal-btn')?.addEventListener('click', () => {
+        document.getElementById('app-modal')?.classList.add('hidden');
+    });
+
+    // Close modal on click outside
+    document.getElementById('app-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'app-modal') {
+            e.target.classList.add('hidden');
+        }
+    });
 
     loadApplications();
 }
