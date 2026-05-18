@@ -32,16 +32,19 @@ export function attachKanbanEvents(jobId) {
             el.textContent = 'No candidates';
         });
 
-        if (!res.success || !Array.isArray(res.data)) {
+        let applications = [];
+        if (!res.success || (!Array.isArray(res.data) && (!res.data || !Array.isArray(res.data.items)))) {
             document.querySelectorAll('.kanban-placeholder').forEach(el => {
                 el.textContent = 'Failed to load';
             });
             return;
         }
 
+        applications = Array.isArray(res.data) ? res.data : res.data.items;
+
         // Group applications by status
         const grouped = {};
-        for (const app of res.data) {
+        for (const app of applications) {
             const status = (app.status || 'submitted').toLowerCase();
             if (!grouped[status]) grouped[status] = [];
             grouped[status].push(app);
