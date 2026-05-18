@@ -261,19 +261,19 @@ async function exportPdf() {
         y += 6;
     }
 
-    /** Section heading: UPPERCASE bold with rule on the same baseline. */
+    /** Section heading: UPPERCASE bold, then thin rule 1pt below. */
     function sectionHead(title) {
-        y += 4;
+        y += 4.4; // ~10% more than original 4
         ensureSpace(18);
         doc.setFont('times', 'bold');
         doc.setFontSize(10);
-        const titleWidth = doc.getTextWidth(title.toUpperCase());
         doc.text(title.toUpperCase(), M, y);
-        // Rule on same baseline, starting just after the title text
+        y += 10 * LH;
+        // Rule 1pt below the text baseline
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
-        doc.line(M + titleWidth + 4, y, PW - M, y);
-        y += 10 * LH;
+        doc.line(M, y + 1, PW - M, y + 1);
+        y += 7; // gap after rule before content
     }
 
     /** Render multi-line description as bullet points (•). */
@@ -301,7 +301,7 @@ async function exportPdf() {
     if (links.length) {
         text(links.join('  ·  '), 9, 'normal', { align: 'center' });
     }
-    rule();
+    y += 4; // small gap before first section
 
     // =========== SUMMARY ===========
     if (p.summary) {
