@@ -63,7 +63,7 @@ export function attachKanbanEvents(jobId) {
             const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
             if (!column) continue;
 
-            const countEl = column.closest('[data-status]').querySelector('.kanban-count');
+            const countEl = column.parentElement.querySelector('.kanban-count');
             if (countEl) countEl.textContent = apps.length;
 
             column.innerHTML = apps.map(app => {
@@ -90,7 +90,7 @@ export function attachKanbanEvents(jobId) {
         document.querySelectorAll('.kanban-column').forEach(col => {
             const status = col.dataset.status;
             if (!grouped[status]) {
-                const countEl = col.closest('[data-status]').querySelector('.kanban-count');
+                const countEl = col.parentElement.querySelector('.kanban-count');
                 if (countEl) countEl.textContent = '0';
             }
         });
@@ -132,6 +132,26 @@ export function attachKanbanEvents(jobId) {
                     const cv = app.cvData || {};
                     const p = cv.personalInfo || {};
                     
+                    let customSectionsHtml = '';
+                    if (cv.customSections && cv.customSections.length) {
+                        customSectionsHtml = cv.customSections.map(sec => {
+                            if (!sec.title) return '';
+                            return `
+                                <div class="mb-6 bg-white border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                                    <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">${sec.title}</h3>
+                                    <div class="space-y-4">
+                                        ${sec.items.map(item => `
+                                            <div class="border-l-4 border-black pl-3 font-mono text-sm">
+                                                <p class="font-bold uppercase text-base">${item.title} ${item.subtitle ? `(${item.subtitle})` : ''}</p>
+                                                ${item.date ? `<p class="text-xs text-gray-500 mb-1">${item.date}</p>` : ''}
+                                                ${item.description ? `<p class="text-sm whitespace-pre-wrap">${item.description}</p>` : ''}
+                                            </div>`).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+
                     content.innerHTML = `
                         <h2 class="text-3xl font-black uppercase border-b-4 border-black pb-2 mb-6">Candidate Details</h2>
                         
@@ -141,6 +161,9 @@ export function attachKanbanEvents(jobId) {
                             <p class="font-mono text-sm mb-1"><strong>Email:</strong> ${p.email || 'N/A'}</p>
                             <p class="font-mono text-sm mb-1"><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
                             <p class="font-mono text-sm mb-1"><strong>Location:</strong> ${p.location || 'N/A'}</p>
+                            ${p.linkedin ? `<p class="font-mono text-sm mb-1"><strong>LinkedIn:</strong> <a href="${p.linkedin}" target="_blank" class="text-blue-600 hover:underline">${p.linkedin}</a></p>` : ''}
+                            ${p.website ? `<p class="font-mono text-sm mb-1"><strong>Website:</strong> <a href="${p.website}" target="_blank" class="text-blue-600 hover:underline">${p.website}</a></p>` : ''}
+                            ${p.summary ? `<p class="font-mono text-sm mt-2 whitespace-pre-wrap">${p.summary}</p>` : ''}
                             ${app.aiScore ? `<p class="font-mono text-sm mt-2 text-[#5ce1e6] bg-black inline-block px-2 py-1"><strong>AI Score:</strong> ${app.aiScore}</p>` : ''}
                         </div>
 
@@ -151,9 +174,17 @@ export function attachKanbanEvents(jobId) {
                                 ${app.customAnswers.map(ans => `
                                     <li class="border-l-4 border-[#5ce1e6] pl-3">
                                         <div class="font-bold mb-1">Q: ${ans.questionId}</div>
-                                        <div class="text-gray-700">A: ${ans.answer}</div>
+                                        <div class="text-gray-700 whitespace-pre-wrap">A: ${ans.answer}</div>
                                     </li>`).join('')}
                             </ul>
+                        </div>` : ''}
+
+                        ${cv.skills && cv.skills.length ? `
+                        <div class="mb-6 bg-white border-2 border-black p-4 shadow-[4px_4px_0_0_#0b0b0b]">
+                            <h3 class="font-bold uppercase tracking-widest text-sm bg-black text-white inline-block px-3 py-1 mb-3">Skills</h3>
+                            <div class="flex flex-wrap gap-2">
+                                ${cv.skills.map(s => `<span class="bg-gray-200 text-black border border-black font-mono text-xs px-2 py-1">${s}</span>`).join('')}
+                            </div>
                         </div>` : ''}
 
                         ${cv.experience && cv.experience.length ? `
@@ -177,10 +208,13 @@ export function attachKanbanEvents(jobId) {
                                     <div class="border-l-4 border-black pl-3 font-mono text-sm">
                                         <p class="font-bold uppercase text-base">${e.degree} in ${e.field}</p>
                                         <p class="text-sm">${e.school}</p>
-                                        <p class="text-xs text-gray-500">${e.startDate} - ${e.endDate}</p>
+                                        <p class="text-xs text-gray-500 mb-1">${e.startDate} - ${e.endDate}</p>
+                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap">${e.description}</p>` : ''}
                                     </div>`).join('')}
                             </div>
                         </div>` : ''}
+
+                        ${customSectionsHtml}
                     `;
                 } else {
                     content.innerHTML = `<p class="font-mono font-bold text-[#ff2a2a] uppercase border-2 border-[#ff2a2a] p-4 text-center">Failed to load details: ${res.error}</p>`;
