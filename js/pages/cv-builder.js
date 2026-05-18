@@ -306,16 +306,16 @@ async function exportPdf() {
     if (cvData.education.length) {
         sectionHead('Education');
         cvData.education.forEach(e => {
-            // Left: degree + school   Right: dates
-            const left = `${e.degree || ''}${e.field ? ' in ' + e.field : ''}${e.school ? ', ' + e.school : ''}`.trim();
-            const dates = [e.startDate, e.endDate].filter(Boolean).join(' – ');
-            if (left || dates) {
-                doc.setFont('times', 'bold'); doc.setFontSize(9.5);
-                ensureSpace(12);
-                if (left) doc.text(left, M, y);
-                if (dates) { doc.setFont('times', 'normal'); doc.text(dates, PW - M, y, { align: 'right' }); }
-                y += 11;
-            }
+            ensureSpace(12);
+            // Row 1: Degree + field (bold, left) + dates (right)
+            const degreeLine = `${e.degree || ''}${e.field ? ' in ' + e.field : ''}`.trim();
+            const dates = [e.startDate, e.endDate].filter(Boolean).join(' \u2013 ');
+            doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+            if (degreeLine) doc.text(degreeLine, M, y);
+            if (dates) { doc.setFont('times', 'normal'); doc.setFontSize(9); doc.text(dates, PW - M, y, { align: 'right' }); }
+            y += 11;
+            // Row 2: School name italic
+            if (e.school) { text(e.school, 9, 'italic', { indent: 4 }); }
             if (e.gpa) { text('GPA: ' + e.gpa, 9, 'normal', { indent: 4 }); }
             bullets(e.description);
             y += 2;
@@ -326,15 +326,16 @@ async function exportPdf() {
     if (cvData.experience.length) {
         sectionHead('Experience');
         cvData.experience.forEach(e => {
-            // Left: title, company   Right: dates
-            const left = `${e.title || ''}${e.company ? ', ' + e.company : ''}`.trim();
-            const dates = [e.startDate, e.endDate].filter(Boolean).join(' – ');
-            doc.setFont('times', 'bold'); doc.setFontSize(9.5);
             ensureSpace(12);
-            if (left) doc.text(left, M, y);
-            if (dates) { doc.setFont('times', 'normal'); doc.text(dates, PW - M, y, { align: 'right' }); }
+            // Row 1: Bold job title (left) + date range (right)
+            const dates = [e.startDate, e.endDate].filter(Boolean).join(' \u2013 ');
+            doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+            if (e.title) doc.text(e.title, M, y);
+            if (dates) { doc.setFont('times', 'normal'); doc.setFontSize(9); doc.text(dates, PW - M, y, { align: 'right' }); }
             y += 11;
-            if (e.location) { text(e.location, 9, 'italic', { indent: 4 }); }
+            // Row 2: Italic company + location
+            const compLine = [e.company, e.location].filter(Boolean).join('  \u2014  ');
+            if (compLine) { text(compLine, 9, 'italic', { indent: 4 }); }
             bullets(e.description);
             y += 2;
         });
@@ -343,7 +344,9 @@ async function exportPdf() {
     // =========== SKILLS ===========
     if (cvData.skills?.length) {
         sectionHead('Skills');
-        text(cvData.skills.join(',  '), 9);
+        // Render skills as wrapped comma-separated text respecting content width
+        const skillStr = cvData.skills.join(',  ');
+        text(skillStr, 9, 'normal', { maxWidth: CW });
         y += 2;
     }
 
@@ -353,14 +356,16 @@ async function exportPdf() {
             if (!sec.title) return;
             sectionHead(sec.title);
             sec.items.forEach(item => {
-                const left = `${item.title || ''}${item.subtitle ? ' — ' + item.subtitle : ''}`.trim();
-                if (left || item.date) {
+                ensureSpace(12);
+                // Row 1: Title (bold, left) + date (right)
+                if (item.title || item.date) {
                     doc.setFont('times', 'bold'); doc.setFontSize(9.5);
-                    ensureSpace(12);
-                    if (left) doc.text(left, M, y);
-                    if (item.date) { doc.setFont('times', 'normal'); doc.text(item.date, PW - M, y, { align: 'right' }); }
+                    if (item.title) doc.text(item.title, M, y);
+                    if (item.date) { doc.setFont('times', 'normal'); doc.setFontSize(9); doc.text(item.date, PW - M, y, { align: 'right' }); }
                     y += 11;
                 }
+                // Row 2: Subtitle italic
+                if (item.subtitle) { text(item.subtitle, 9, 'italic', { indent: 4 }); }
                 bullets(item.description);
                 y += 2;
             });
@@ -435,7 +440,7 @@ async function importPdf(file) {
                 return {
                     company: exp.company || '',
                     title: exp.jobTitle || '',
-                    location: '',
+                    location: exp.location || '',
                     startDate: d.start,
                     endDate: d.end,
                     description: (exp.descriptions || []).join('\n'),
@@ -448,11 +453,12 @@ async function importPdf(file) {
         // Skills: open-resume returns { featuredSkills: [{skill, rating}], descriptions: [] }
         const sk = resume.skills || {};
         if (sk.featuredSkills?.length) {
-            parsed.skills.push(...sk.featuredSkills.map(fs => fs.skill).filter(Boolean));
+            parsed.skills.push(...sk.featuredSkills.filter(fs => fs?.skill).map(fs => fs.skill));
         }
         if (sk.descriptions?.length) {
             // Skill description lines often contain comma-separated lists
             for (const line of sk.descriptions) {
+                if (!line) continue;
                 const parts = line.split(/[,•·|;]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 60);
                 parsed.skills.push(...parts);
             }
