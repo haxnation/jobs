@@ -254,19 +254,18 @@ async function exportPdf() {
 
     /** Thin horizontal rule spanning the content width. */
     function rule() {
-        ensureSpace(4);
+        ensureSpace(6);
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
         doc.line(M, y, PW - M, y);
-        y += 4;
+        y += 6;
     }
 
     /** Section heading: UPPERCASE bold + thin rule. */
     function sectionHead(title) {
-        y += 2;
-        ensureSpace(16);
+        y += 4;
+        ensureSpace(18);
         text(title.toUpperCase(), 10, 'bold');
-        y -= 2;
         rule();
     }
 
