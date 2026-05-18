@@ -104,7 +104,7 @@ export function attachKanbanEvents(jobId) {
                 const appId = e.target.dataset.appId;
                 const newStatus = e.target.value;
                 e.target.disabled = true;
-                const res = await apiCall(`/applications/${appId}/status`, 'PATCH', {
+                const res = await apiCall(`/applications/${appId}/status`, 'POST', {
                     jobId,
                     status: newStatus
                 });
