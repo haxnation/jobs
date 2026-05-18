@@ -97,15 +97,15 @@ export async function renderCvBuilder(skipFetch = false) {
     `;
 }
 
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-function personalField(id, label, val, type='text') {
+function personalField(id, label, val, type = 'text') {
     return `<div><label class="font-mono text-xs font-bold uppercase block mb-1">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" class="w-full border-2 border-black p-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"></div>`;
 }
 
 function eduBlock(e, i) {
     return `<div class="edu-entry border-2 border-dashed border-gray-400 p-4 mb-3" data-idx="${i}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Education #${i+1}</span><button class="remove-edu font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Education #${i + 1}</span><button class="remove-edu font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">School</label><input class="edu-school w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.school)}"></div>
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">Degree</label><input class="edu-degree w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.degree)}"></div>
@@ -120,7 +120,7 @@ function eduBlock(e, i) {
 
 function expBlock(e, i) {
     return `<div class="exp-entry border-2 border-dashed border-gray-400 p-4 mb-3" data-idx="${i}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Experience #${i+1}</span><button class="remove-exp font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Experience #${i + 1}</span><button class="remove-exp font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">Company</label><input class="exp-company w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.company)}"></div>
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">Job Title</label><input class="exp-title w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.title)}"></div>
@@ -151,7 +151,7 @@ function customSectionBlock(sec, sIdx) {
 
 function customItemBlock(item, sIdx, iIdx) {
     return `<div class="custom-item border-2 border-dashed border-gray-400 p-4 mb-3" data-sidx="${sIdx}" data-iidx="${iIdx}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Item #${iIdx+1}</span><button class="remove-custom-item font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-sidx="${sIdx}" data-iidx="${iIdx}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Item #${iIdx + 1}</span><button class="remove-custom-item font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-sidx="${sIdx}" data-iidx="${iIdx}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">Title</label><input class="ci-title w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.title)}"></div>
             <div><label class="font-mono text-xs font-bold uppercase block mb-1">Subtitle</label><input class="ci-subtitle w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.subtitle)}"></div>
@@ -209,76 +209,160 @@ function showStatus(msg, ok) {
     if (ok) setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
-// --- PDF Export using jsPDF ---
+// --- PDF Export using jsPDF — Compact MIT CV Format ---
+// Times Roman font, 0.5-inch margins, centered header, tight spacing,
+// bullet-pointed description lines for maximum single-page density.
 async function exportPdf() {
     gatherFormData();
     const { jsPDF } = window.jspdf;
     if (!jsPDF) { showStatus('jsPDF not loaded. Please wait and try again.', false); return; }
 
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, M = 20;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' }); // US Letter, points
+    const PW = 612;                    // page width  in pt
+    const PH = 792;                    // page height in pt
+    const M  = 36;                     // 0.5 inch margin
+    const CW = PW - 2 * M;            // content width
+    const BOTTOM = PH - M;            // bottom margin boundary
     let y = M;
-    const maxW = W - 2 * M;
 
-    function addText(text, size, bold, indent = 0) {
+    // --- helpers ---
+    const LH = 1.15;                   // line-height multiplier
+
+    /** Check page break; add new page if needed. Returns new y. */
+    function ensureSpace(needed) {
+        if (y + needed > BOTTOM) { doc.addPage(); y = M; }
+    }
+
+    /** Render wrapped text. Returns y after text. */
+    function text(str, size, style = 'normal', opts = {}) {
+        const { indent = 0, align = 'left', maxWidth = CW } = opts;
+        doc.setFont('times', style);
         doc.setFontSize(size);
-        doc.setFont('helvetica', bold ? 'bold' : 'normal');
-        const lines = doc.splitTextToSize(text, maxW - indent);
-        if (y + lines.length * (size * 0.45) > 280) { doc.addPage(); y = M; }
-        doc.text(lines, M + indent, y);
-        y += lines.length * (size * 0.45) + 1;
+        const w = maxWidth - indent;
+        const lines = doc.splitTextToSize(str, w);
+        const lineH = size * LH;
+        ensureSpace(lines.length * lineH);
+        const xBase = M + indent;
+        for (const line of lines) {
+            let x = xBase;
+            if (align === 'center') x = PW / 2;
+            doc.text(line, x, y, { align });
+            y += lineH;
+        }
+        return y;
     }
 
-    function addLine() {
-        doc.setDrawColor(0); doc.setLineWidth(0.5);
-        doc.line(M, y, W - M, y); y += 3;
+    /** Thin horizontal rule spanning the content width. */
+    function rule() {
+        ensureSpace(4);
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.line(M, y, PW - M, y);
+        y += 4;
     }
 
-    // Header
+    /** Section heading: UPPERCASE bold + thin rule. */
+    function sectionHead(title) {
+        y += 2;
+        ensureSpace(16);
+        text(title.toUpperCase(), 10, 'bold');
+        y -= 2;
+        rule();
+    }
+
+    /** Render multi-line description as bullet points (•). */
+    function bullets(desc, size = 9) {
+        if (!desc) return;
+        const lines = desc.split('\n').map(l => l.trim()).filter(Boolean);
+        for (const line of lines) {
+            const bullet = line.startsWith('•') || line.startsWith('-') || line.startsWith('–')
+                ? line.replace(/^[•\-–]\s*/, '• ')
+                : '• ' + line;
+            text(bullet, size, 'normal', { indent: 8 });
+        }
+    }
+
+    // =========== HEADER ===========
     const p = cvData.personalInfo;
-    if (p.name) addText(p.name, 18, true);
-    const contactParts = [p.email, p.phone, p.location, p.linkedin, p.website].filter(Boolean);
-    if (contactParts.length) addText(contactParts.join('  |  '), 9, false);
-    y += 2; addLine();
+    if (p.name) {
+        text(p.name, 16, 'bold', { align: 'center' });
+    }
+    const contact = [p.email, p.phone, p.location].filter(Boolean);
+    if (contact.length) {
+        text(contact.join('  ·  '), 9, 'normal', { align: 'center' });
+    }
+    const links = [p.linkedin, p.website].filter(Boolean);
+    if (links.length) {
+        text(links.join('  ·  '), 9, 'normal', { align: 'center' });
+    }
+    rule();
 
-    if (p.summary) { addText('PROFESSIONAL SUMMARY', 11, true); addText(p.summary, 9, false); y += 2; }
-
-    if (cvData.experience.length) {
-        addText('WORK EXPERIENCE', 11, true); addLine();
-        cvData.experience.forEach(e => {
-            addText(`${e.title}${e.company ? ' — ' + e.company : ''}`, 10, true);
-            const meta = [e.location, [e.startDate, e.endDate].filter(Boolean).join(' – ')].filter(Boolean).join('  |  ');
-            if (meta) addText(meta, 8, false);
-            if (e.description) addText(e.description, 9, false, 4);
-            y += 2;
-        });
+    // =========== SUMMARY ===========
+    if (p.summary) {
+        sectionHead('Summary');
+        text(p.summary, 9);
     }
 
+    // =========== EDUCATION ===========
     if (cvData.education.length) {
-        addText('EDUCATION', 11, true); addLine();
+        sectionHead('Education');
         cvData.education.forEach(e => {
-            addText(`${e.degree}${e.field ? ' in ' + e.field : ''}${e.school ? ' — ' + e.school : ''}`, 10, true);
-            const meta = [[e.startDate, e.endDate].filter(Boolean).join(' – '), e.gpa ? 'GPA: ' + e.gpa : ''].filter(Boolean).join('  |  ');
-            if (meta) addText(meta, 8, false);
-            if (e.description) addText(e.description, 9, false, 4);
+            // Left: degree + school   Right: dates
+            const left = `${e.degree || ''}${e.field ? ' in ' + e.field : ''}${e.school ? ', ' + e.school : ''}`.trim();
+            const dates = [e.startDate, e.endDate].filter(Boolean).join(' – ');
+            if (left || dates) {
+                doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+                ensureSpace(12);
+                if (left) doc.text(left, M, y);
+                if (dates) { doc.setFont('times', 'normal'); doc.text(dates, PW - M, y, { align: 'right' }); }
+                y += 11;
+            }
+            if (e.gpa) { text('GPA: ' + e.gpa, 9, 'normal', { indent: 4 }); }
+            bullets(e.description);
             y += 2;
         });
     }
 
-    if (cvData.skills && cvData.skills.length) {
-        addText('SKILLS', 11, true); addLine();
-        addText(cvData.skills.join('  •  '), 9, false);
+    // =========== EXPERIENCE ===========
+    if (cvData.experience.length) {
+        sectionHead('Experience');
+        cvData.experience.forEach(e => {
+            // Left: title, company   Right: dates
+            const left = `${e.title || ''}${e.company ? ', ' + e.company : ''}`.trim();
+            const dates = [e.startDate, e.endDate].filter(Boolean).join(' – ');
+            doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+            ensureSpace(12);
+            if (left) doc.text(left, M, y);
+            if (dates) { doc.setFont('times', 'normal'); doc.text(dates, PW - M, y, { align: 'right' }); }
+            y += 11;
+            if (e.location) { text(e.location, 9, 'italic', { indent: 4 }); }
+            bullets(e.description);
+            y += 2;
+        });
+    }
+
+    // =========== SKILLS ===========
+    if (cvData.skills?.length) {
+        sectionHead('Skills');
+        text(cvData.skills.join(',  '), 9);
         y += 2;
     }
 
-    if (cvData.customSections && cvData.customSections.length) {
+    // =========== CUSTOM SECTIONS ===========
+    if (cvData.customSections?.length) {
         cvData.customSections.forEach(sec => {
             if (!sec.title) return;
-            addText(sec.title.toUpperCase(), 11, true); addLine();
+            sectionHead(sec.title);
             sec.items.forEach(item => {
-                addText(`${item.title}${item.subtitle ? ' — ' + item.subtitle : ''}`, 10, true);
-                if (item.date) addText(item.date, 8, false);
-                if (item.description) addText(item.description, 9, false, 4);
+                const left = `${item.title || ''}${item.subtitle ? ' — ' + item.subtitle : ''}`.trim();
+                if (left || item.date) {
+                    doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+                    ensureSpace(12);
+                    if (left) doc.text(left, M, y);
+                    if (item.date) { doc.setFont('times', 'normal'); doc.text(item.date, PW - M, y, { align: 'right' }); }
+                    y += 11;
+                }
+                bullets(item.description);
                 y += 2;
             });
         });
@@ -288,237 +372,122 @@ async function exportPdf() {
     showStatus('✓ PDF exported successfully!', true);
 }
 
-// --- PDF Import & Parse (direct pdfjs-dist — no wrapper library) ---
-// We import pdfjs-dist directly so we fully control the module instance and
-// can set GlobalWorkerOptions.workerSrc on the exact same object pdfjs uses
-// internally. Using a third-party wrapper (open-resume-pdf-parser) bundles its
-// own pdfjs copy, making it impossible to configure the worker from outside.
+// --- PDF Import & Parse using xitanggg/open-resume (open-resume-lib) ---
+// Uses the parseResumeFromPdf function from the open-resume library by xitanggg.
+// The library internally handles pdfjs text extraction, line grouping, section
+// detection, and structured field extraction — giving far more accurate results
+// than a hand-rolled heuristic parser.
 async function importPdf(file) {
-    showStatus('Parsing PDF...', true);
+    showStatus('Parsing PDF — loading open-resume parser...', true);
     try {
-        // Import pdfjs-dist. Use an exact pinned version — esm.sh does not
-        // support semver ranges like ^ in URLs; they are treated literally.
-        const PDFJS_VERSION = '4.10.38';
-        const pdfjsLib = await import(`https://esm.sh/pdfjs-dist@${PDFJS_VERSION}/build/pdf.mjs`);
+        // Dynamically import open-resume-lib from esm.sh (xitanggg/open-resume)
+        const { parseResumeFromPdf } = await import(
+            'https://esm.sh/open-resume-lib@1.0.3'
+        );
 
-        // workerSrc MUST be the worker from the exact same version as the main
-        // lib — any mismatch throws "API version X does not match Worker version Y".
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-            `https://esm.sh/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.mjs`;
+        // parseResumeFromPdf expects a URL string; create an Object URL from
+        // the uploaded File so the library's internal pdfjs can fetch it.
+        const fileUrl = URL.createObjectURL(file);
 
-        // Read the file as ArrayBuffer so pdfjs can parse it without needing
-        // a URL (avoids object-URL lifecycle issues).
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-        // Extract all text lines from every page, preserving rough page order.
-        const pages = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            // Group items into lines by their Y position (rounded to 1 dp).
-            const lineMap = new Map();
-            for (const item of content.items) {
-                if (!item.str) continue;
-                const y = item.transform[5].toFixed(1);
-                if (!lineMap.has(y)) lineMap.set(y, []);
-                lineMap.get(y).push(item.str);
-            }
-            // Sort descending by Y (top of page first in PDF coordinate space).
-            const lines = [...lineMap.entries()]
-                .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
-                .map(([, words]) => words.join(' ').trim())
-                .filter(Boolean);
-            pages.push(lines);
+        showStatus('Parsing PDF...', true);
+        let resume;
+        try {
+            resume = await parseResumeFromPdf(fileUrl);
+        } finally {
+            URL.revokeObjectURL(fileUrl);
         }
-        const allLines = pages.flat();
-        console.log('PDF lines extracted:', allLines);
 
-        // --- Heuristic parser ---
+        console.log('open-resume parsed result:', resume);
+
+        // --- Map open-resume Resume → our cvData structure ---
+        const profile = resume.profile || {};
+
+        // Split the date string "Sep 2020 - Jun 2024" into start/end
+        const splitDate = (dateStr) => {
+            if (!dateStr) return { start: '', end: '' };
+            const parts = dateStr.split(/\s*[-–—]\s*/);
+            return { start: parts[0]?.trim() || '', end: parts[1]?.trim() || '' };
+        };
+
         const parsed = {
-            personalInfo: { name: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '' },
-            education: [], experience: [], skills: [], customSections: []
+            personalInfo: {
+                name: profile.name || '',
+                email: profile.email || '',
+                phone: profile.phone || '',
+                location: profile.location || '',
+                linkedin: (profile.url && /linkedin/i.test(profile.url)) ? profile.url : '',
+                website: (profile.url && !/linkedin/i.test(profile.url)) ? profile.url : '',
+                summary: profile.summary || '',
+            },
+            education: (resume.educations || []).map(edu => {
+                const d = splitDate(edu.date);
+                return {
+                    school: edu.school || '',
+                    degree: edu.degree || '',
+                    field: '',
+                    gpa: edu.gpa || '',
+                    startDate: d.start,
+                    endDate: d.end,
+                    description: (edu.descriptions || []).join('\n'),
+                };
+            }),
+            experience: (resume.workExperiences || []).map(exp => {
+                const d = splitDate(exp.date);
+                return {
+                    company: exp.company || '',
+                    title: exp.jobTitle || '',
+                    location: '',
+                    startDate: d.start,
+                    endDate: d.end,
+                    description: (exp.descriptions || []).join('\n'),
+                };
+            }),
+            skills: [],
+            customSections: [],
         };
 
-        // Regexes
-        const emailRe   = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
-        const phoneRe   = /(?:\+?\d[\d\s\-().]{7,}\d)/;
-        const linkedinRe = /linkedin\.com\/in\/[\w\-]+/i;
-        const urlRe     = /https?:\/\/[^\s]+/i;
-        const dateRe    = /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+\d{4}|\d{4}\s*[-–—]\s*(?:\d{4}|Present|Current)/i;
-
-        const sectionHeaders = {
-            experience:    /\b(work\s+experience|experience|employment|professional\s+background)\b/i,
-            education:     /\b(education|academic|qualifications?)\b/i,
-            skills:        /\b(skills?|technical\s+skills?|competencies|technologies)\b/i,
-            summary:       /\b(summary|objective|profile|about)\b/i,
-            projects:      /\b(projects?|portfolio)\b/i,
-            certifications:/\b(certifications?|certificates?|licenses?)\b/i,
-            languages:     /\b(languages?)\b/i,
-        };
-
-        // Name heuristic: first non-empty line that has no email/phone/url
-        // and looks like a proper name (2-4 capitalised words).
-        const nameRe = /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$/;
-        for (const line of allLines.slice(0, 6)) {
-            if (!parsed.personalInfo.name && nameRe.test(line.trim())) {
-                parsed.personalInfo.name = line.trim();
-                break;
-            }
+        // Skills: open-resume returns { featuredSkills: [{skill, rating}], descriptions: [] }
+        const sk = resume.skills || {};
+        if (sk.featuredSkills?.length) {
+            parsed.skills.push(...sk.featuredSkills.map(fs => fs.skill).filter(Boolean));
         }
-
-        // Contact details: scan first 15 lines
-        for (const line of allLines.slice(0, 15)) {
-            if (!parsed.personalInfo.email) {
-                const m = line.match(emailRe);
-                if (m) parsed.personalInfo.email = m[0];
-            }
-            if (!parsed.personalInfo.phone) {
-                const m = line.match(phoneRe);
-                if (m) parsed.personalInfo.phone = m[0].trim();
-            }
-            if (!parsed.personalInfo.linkedin) {
-                const m = line.match(linkedinRe);
-                if (m) parsed.personalInfo.linkedin = 'https://' + m[0];
-            }
-            if (!parsed.personalInfo.website && !line.match(linkedinRe)) {
-                const m = line.match(urlRe);
-                if (m) parsed.personalInfo.website = m[0];
-            }
-        }
-
-        // Section-based parsing
-        let currentSection = null;
-        let currentEntry   = null;
-        let summaryLines   = [];
-        let projectItems   = [];
-        let certLines      = [];
-        let langLines      = [];
-
-        const isHeader = (line) => {
-            const t = line.trim();
-            // Section headers are typically short, uppercase or title-case, no punctuation mid-line
-            if (t.length > 60) return null;
-            for (const [name, re] of Object.entries(sectionHeaders)) {
-                if (re.test(t)) return name;
-            }
-            return null;
-        };
-
-        const flushEntry = () => {
-            if (!currentEntry) return;
-            if (currentSection === 'experience' && (currentEntry.company || currentEntry.title)) {
-                parsed.experience.push({ ...currentEntry });
-            } else if (currentSection === 'education' && (currentEntry.school || currentEntry.degree)) {
-                parsed.education.push({ ...currentEntry });
-            } else if (currentSection === 'projects' && currentEntry.title) {
-                projectItems.push({ title: currentEntry.title, subtitle: '', date: currentEntry.date || '', description: currentEntry.description || '' });
-            }
-            currentEntry = null;
-        };
-
-        for (let i = 0; i < allLines.length; i++) {
-            const line = allLines[i].trim();
-            if (!line) continue;
-
-            const detected = isHeader(line);
-            if (detected) {
-                flushEntry();
-                currentSection = detected;
-                currentEntry = null;
-                continue;
-            }
-
-            if (currentSection === 'summary') {
-                summaryLines.push(line);
-                continue;
-            }
-
-            if (currentSection === 'skills') {
-                // Skills lines: split by common delimiters
-                const parts = line.split(/[,•·|;\/]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 40);
+        if (sk.descriptions?.length) {
+            // Skill description lines often contain comma-separated lists
+            for (const line of sk.descriptions) {
+                const parts = line.split(/[,•·|;]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 60);
                 parsed.skills.push(...parts);
-                continue;
-            }
-
-            if (currentSection === 'certifications') {
-                certLines.push(line);
-                continue;
-            }
-
-            if (currentSection === 'languages') {
-                langLines.push(line);
-                continue;
-            }
-
-            if (currentSection === 'experience' || currentSection === 'education' || currentSection === 'projects') {
-                const hasDate = dateRe.test(line);
-
-                if (currentSection === 'experience') {
-                    // A line with a date range likely starts a new entry or is the date line of the current one
-                    if (hasDate && currentEntry) {
-                        const datePart = line.match(dateRe)?.[0] || '';
-                        const dates = datePart.split(/[-–—]/).map(s => s.trim());
-                        currentEntry.startDate = dates[0] || '';
-                        currentEntry.endDate   = dates[1] || '';
-                        // remainder of the line might be location
-                        const rest = line.replace(dateRe, '').trim();
-                        if (rest && !currentEntry.location) currentEntry.location = rest;
-                    } else if (!currentEntry) {
-                        flushEntry();
-                        currentEntry = { company: '', title: line, location: '', startDate: '', endDate: '', description: '' };
-                    } else if (!currentEntry.company) {
-                        currentEntry.company = line;
-                    } else {
-                        currentEntry.description += (currentEntry.description ? '\n' : '') + line;
-                    }
-                }
-
-                if (currentSection === 'education') {
-                    if (!currentEntry) {
-                        currentEntry = { school: line, degree: '', field: '', gpa: '', startDate: '', endDate: '', description: '' };
-                    } else if (!currentEntry.degree) {
-                        currentEntry.degree = line;
-                    } else if (hasDate) {
-                        const datePart = line.match(dateRe)?.[0] || '';
-                        const dates = datePart.split(/[-–—]/).map(s => s.trim());
-                        currentEntry.startDate = dates[0] || '';
-                        currentEntry.endDate   = dates[1] || '';
-                    } else {
-                        const gpaMatch = line.match(/GPA[:\s]+[\d.]+/i);
-                        if (gpaMatch) currentEntry.gpa = gpaMatch[0].replace(/GPA[:\s]+/i, '').trim();
-                        else currentEntry.description += (currentEntry.description ? '\n' : '') + line;
-                    }
-                }
-
-                if (currentSection === 'projects') {
-                    if (!currentEntry) {
-                        currentEntry = { title: line, date: '', description: '' };
-                    } else if (hasDate && !currentEntry.date) {
-                        currentEntry.date = line.match(dateRe)?.[0] || '';
-                    } else {
-                        currentEntry.description += (currentEntry.description ? '\n' : '') + line;
-                    }
-                }
             }
         }
-        flushEntry();
-
-        if (summaryLines.length)  parsed.personalInfo.summary = summaryLines.join(' ');
         parsed.skills = [...new Set(parsed.skills)].slice(0, 40);
 
-        if (projectItems.length) {
-            parsed.customSections.push({ title: 'Projects', items: projectItems });
+        // Projects → custom section
+        if (resume.projects?.length) {
+            parsed.customSections.push({
+                title: 'Projects',
+                items: resume.projects.map(p => ({
+                    title: p.project || '',
+                    subtitle: '',
+                    date: p.date || '',
+                    description: (p.descriptions || []).join('\n'),
+                })),
+            });
         }
-        if (certLines.length) {
-            parsed.customSections.push({ title: 'Certifications', items: [{ title: '', subtitle: '', date: '', description: certLines.join('\n') }] });
-        }
-        if (langLines.length) {
-            parsed.customSections.push({ title: 'Languages', items: [{ title: '', subtitle: '', date: '', description: langLines.join(', ') }] });
+
+        // Custom section (catch-all from open-resume)
+        if (resume.custom?.descriptions?.length) {
+            parsed.customSections.push({
+                title: 'Additional',
+                items: [{
+                    title: '',
+                    subtitle: '',
+                    date: '',
+                    description: resume.custom.descriptions.join('\n'),
+                }],
+            });
         }
 
         cvData = parsed;
-        showStatus('✓ PDF imported! Please review and correct any fields.', true);
+        showStatus('✓ PDF imported via open-resume! Review and correct any fields.', true);
         const app = document.getElementById('app');
         app.innerHTML = await renderCvBuilder(true);
         attachCvBuilderEvents();
