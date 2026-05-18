@@ -1,14 +1,35 @@
 import { apiCall } from '../api.js';
 
+let searchQuery = '';
+let pageState = {
+    submitted: 1,
+    reviewing: 1,
+    shortlisted: 1,
+    interview: 1,
+    offer: 1,
+    hired: 1,
+    rejected: 1
+};
+const statuses = ['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'];
+
 export async function renderKanban(jobId) {
+    // Reset state on load
+    searchQuery = '';
+    for(const key in pageState) pageState[key] = 1;
+
     return `
-        <div class="mb-8">
-            <h1 class="text-3xl font-black text-black uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
-                Applicant Pipeline <span class="text-gray-500 text-lg">Job #${jobId}</span>
-            </h1>
+        <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-4 border-black pb-4 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-black uppercase tracking-tighter leading-none">
+                    Applicant Pipeline <span class="text-gray-500 text-lg">Job #${jobId}</span>
+                </h1>
+            </div>
+            <div class="w-full sm:w-auto">
+                <input type="text" id="kanban-search" placeholder="Search by ID or Name..." class="w-full sm:w-64 border-2 border-black p-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]">
+            </div>
         </div>
         <div id="kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-            ${['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'].map(status => `
+            ${statuses.map(status => `
                 <div class="bg-[#fafafa] border-2 border-black shadow-[4px_4px_0_0_#0b0b0b] flex flex-col" data-status="${status}">
                     <div class="bg-black text-white p-3 font-bold uppercase tracking-widest border-b-2 border-black flex justify-between items-center">
                         <span>${status}</span>
@@ -32,99 +53,126 @@ export async function renderKanban(jobId) {
 }
 
 export function attachKanbanEvents(jobId) {
-    async function loadApplications() {
-        const res = await apiCall(`/jobs/${jobId}/applications`);
-
-        // Clear all placeholders
-        document.querySelectorAll('.kanban-placeholder').forEach(el => {
-            el.textContent = 'No candidates';
+    const searchInput = document.getElementById('kanban-search');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            // Reset page state on search
+            for(const key in pageState) pageState[key] = 1;
+            loadAllColumns(jobId);
         });
+    }
 
-        let applications = [];
-        if (!res.success || (!Array.isArray(res.data) && (!res.data || !Array.isArray(res.data.items)))) {
-            document.querySelectorAll('.kanban-placeholder').forEach(el => {
-                el.textContent = 'Failed to load';
-            });
+    async function loadAllColumns(jobId) {
+        await Promise.all(statuses.map(s => loadColumn(jobId, s)));
+    }
+
+    async function loadColumn(jobId, status) {
+        const page = pageState[status] || 1;
+        const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
+        
+        if (col) {
+            col.innerHTML = '<div class="kanban-placeholder text-sm font-mono text-gray-500 italic">Loading...</div>';
+        }
+
+        const res = await apiCall(`/jobs/${jobId}/applications?status=${status}&page=${page}&limit=10&search=${encodeURIComponent(searchQuery)}`);
+        
+        if (!res.success) {
+            if (col) col.innerHTML = '<div class="kanban-placeholder text-[#ff2a2a] italic font-bold">Failed to load</div>';
             return;
         }
 
-        applications = Array.isArray(res.data) ? res.data : res.data.items;
-
-        // Group applications by status
-        const grouped = {};
-        for (const app of applications) {
-            const status = (app.status || 'submitted').toLowerCase();
-            if (!grouped[status]) grouped[status] = [];
-            grouped[status].push(app);
-        }
-
-        // Render cards into columns
-        for (const [status, apps] of Object.entries(grouped)) {
-            const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
-            if (!column) continue;
-
-            const countEl = column.parentElement.querySelector('.kanban-count');
-            if (countEl) countEl.textContent = apps.length;
-
-            column.innerHTML = apps.map(app => {
-                const nameStr = app.applicantName && app.applicantName !== 'Unknown' ? ` - ${app.applicantName}` : '';
-                return `
-                <div class="bg-white border-2 border-black p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card" data-app-id="${app.applicationId}" data-job-id="${jobId}">
-                    <p class="font-mono text-xs font-bold uppercase">ID: ${app.applicantId?.substring(0, 8)}${nameStr}</p>
-                    ${app.aiScore ? `<p class="font-mono text-[10px] text-gray-600">AI Score: <span class="font-bold text-black">${app.aiScore}</span></p>` : ''}
-                    <p class="font-mono text-[10px] text-gray-400">${new Date(app.createdAt).toLocaleDateString()}</p>
-                    
-                    <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300">
-                        <select class="status-shift font-mono text-[10px] uppercase border-2 border-black p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}">
-                            ${['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'].map(s => 
-                                `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
-                            ).join('')}
-                        </select>
-                        <button class="view-app-btn font-mono text-[10px] uppercase bg-black text-white border-2 border-black px-2 py-1 hover:bg-[#5ce1e6] hover:text-black transition-colors" data-app-id="${app.applicationId}">View</button>
-                    </div>
-                </div>
-            `}).join('');
-        }
-
-        // Update counts for empty columns
-        document.querySelectorAll('.kanban-column').forEach(col => {
-            const status = col.dataset.status;
-            if (!grouped[status]) {
-                const countEl = col.parentElement.querySelector('.kanban-count');
-                if (countEl) countEl.textContent = '0';
-            }
-        });
-
-        attachCardEvents();
+        renderColumn(jobId, status, res.data.items || res.data, res.data.pagination);
     }
 
-    function attachCardEvents() {
-        document.querySelectorAll('.status-shift').forEach(select => {
+    function renderColumn(jobId, status, apps, pagination) {
+        const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
+        if (!col) return;
+
+        const countEl = col.parentElement.querySelector('.kanban-count');
+        if (countEl) countEl.textContent = pagination ? pagination.totalItems : apps.length;
+
+        if (!apps || apps.length === 0) {
+            col.innerHTML = `<div class="kanban-placeholder text-sm font-mono text-gray-500 italic">No candidates</div>`;
+            return;
+        }
+
+        let html = apps.map(app => {
+            const nameStr = app.applicantName && app.applicantName !== 'Unknown' ? ` - ${app.applicantName}` : '';
+            return `
+            <div class="bg-white border-2 border-black p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card" data-app-id="${app.applicationId}" data-job-id="${jobId}">
+                <p class="font-mono text-xs font-bold uppercase">ID: ${app.applicantId?.substring(0, 8)}${nameStr}</p>
+                ${app.aiScore ? `<p class="font-mono text-[10px] text-gray-600">AI Score: <span class="font-bold text-black">${app.aiScore}</span></p>` : ''}
+                <p class="font-mono text-[10px] text-gray-400">${new Date(app.createdAt).toLocaleDateString()}</p>
+                
+                <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300">
+                    <select class="status-shift font-mono text-[10px] uppercase border-2 border-black p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}" data-current-status="${status}">
+                        ${statuses.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <button class="view-app-btn font-mono text-[10px] uppercase bg-black text-white border-2 border-black px-2 py-1 hover:bg-[#5ce1e6] hover:text-black transition-colors" data-app-id="${app.applicationId}">View</button>
+                </div>
+            </div>
+            `}).join('');
+
+        if (pagination && pagination.totalPages > 1) {
+            html += `
+            <div class="flex justify-between items-center mt-2 font-mono text-[10px] uppercase border-2 border-black bg-white p-1">
+                <button class="page-btn bg-black text-white px-2 py-1 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#5ce1e6] hover:text-black transition-colors" data-status="${status}" data-page="${pagination.currentPage - 1}" ${pagination.currentPage === 1 ? 'disabled' : ''}>&lt; Prev</button>
+                <span class="font-bold tracking-widest px-2">Pg ${pagination.currentPage}/${pagination.totalPages}</span>
+                <button class="page-btn bg-black text-white px-2 py-1 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#5ce1e6] hover:text-black transition-colors" data-status="${status}" data-page="${pagination.currentPage + 1}" ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}>Next &gt;</button>
+            </div>
+            `;
+        }
+
+        col.innerHTML = html;
+        attachColumnEvents(col, jobId);
+    }
+
+    function attachColumnEvents(col, jobId) {
+        col.querySelectorAll('.status-shift').forEach(select => {
             select.addEventListener('change', async (e) => {
                 const appId = e.target.dataset.appId;
                 const newStatus = e.target.value;
+                const currentStatus = e.target.dataset.currentStatus;
+                
                 e.target.disabled = true;
                 const res = await apiCall(`/applications/${appId}/status`, 'POST', {
                     jobId,
                     status: newStatus
                 });
+                
                 if (res.success) {
-                    loadApplications();
+                    // Reload both the old column and the new column to reflect state accurately
+                    loadColumn(jobId, currentStatus);
+                    loadColumn(jobId, newStatus);
                 } else {
                     alert(res.error || 'Failed to update status');
+                    e.target.value = currentStatus;
                     e.target.disabled = false;
                 }
             });
         });
 
-        document.querySelectorAll('.view-app-btn').forEach(btn => {
+        col.querySelectorAll('.page-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const status = e.currentTarget.dataset.status;
+                const newPage = parseInt(e.currentTarget.dataset.page, 10);
+                if (!isNaN(newPage) && newPage > 0) {
+                    pageState[status] = newPage;
+                    loadColumn(jobId, status);
+                }
+            });
+        });
+
+        col.querySelectorAll('.view-app-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const appId = e.target.dataset.appId;
                 const modal = document.getElementById('app-modal');
                 const content = document.getElementById('app-modal-content');
                 
                 modal.classList.remove('hidden');
-                content.innerHTML = '<p class="font-mono animate-pulse uppercase tracking-widest">Fetching candidate details...</p>';
+                content.innerHTML = '<p class="font-mono animate-pulse uppercase tracking-widest border-2 border-black p-4 text-center">Fetching candidate details...</p>';
                 
                 const res = await apiCall(`/jobs/${jobId}/applications/${appId}`);
                 if (res.success) {
@@ -144,7 +192,7 @@ export function attachKanbanEvents(jobId) {
                                             <div class="border-l-4 border-black pl-3 font-mono text-sm">
                                                 <p class="font-bold uppercase text-base">${item.title} ${item.subtitle ? `(${item.subtitle})` : ''}</p>
                                                 ${item.date ? `<p class="text-xs text-gray-500 mb-1">${item.date}</p>` : ''}
-                                                ${item.description ? `<p class="text-sm whitespace-pre-wrap">${item.description}</p>` : ''}
+                                                ${item.description ? `<p class="text-sm whitespace-pre-wrap mt-1">${item.description}</p>` : ''}
                                             </div>`).join('')}
                                     </div>
                                 </div>
@@ -195,7 +243,7 @@ export function attachKanbanEvents(jobId) {
                                     <div class="border-l-4 border-black pl-3 font-mono text-sm">
                                         <p class="font-bold uppercase text-base">${e.title} at ${e.company}</p>
                                         <p class="text-xs text-gray-500 mb-1">${e.startDate} - ${e.endDate}</p>
-                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap">${e.description}</p>` : ''}
+                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap mt-1">${e.description}</p>` : ''}
                                     </div>`).join('')}
                             </div>
                         </div>` : ''}
@@ -209,7 +257,7 @@ export function attachKanbanEvents(jobId) {
                                         <p class="font-bold uppercase text-base">${e.degree} in ${e.field}</p>
                                         <p class="text-sm">${e.school}</p>
                                         <p class="text-xs text-gray-500 mb-1">${e.startDate} - ${e.endDate}</p>
-                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap">${e.description}</p>` : ''}
+                                        ${e.description ? `<p class="text-sm whitespace-pre-wrap mt-1">${e.description}</p>` : ''}
                                     </div>`).join('')}
                             </div>
                         </div>` : ''}
@@ -227,12 +275,12 @@ export function attachKanbanEvents(jobId) {
         document.getElementById('app-modal')?.classList.add('hidden');
     });
 
-    // Close modal on click outside
     document.getElementById('app-modal')?.addEventListener('click', (e) => {
         if (e.target.id === 'app-modal') {
             e.target.classList.add('hidden');
         }
     });
 
-    loadApplications();
+    // Start fetching
+    loadAllColumns(jobId);
 }
