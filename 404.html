@@ -71,19 +71,32 @@
             </div>
 
             <div id="auth-section" class="flex items-center gap-3">
-                <button id="login-btn" class="hidden font-mono uppercase tracking-widest font-bold bg-[#ff2a2a] text-white border-2 border-black px-6 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75">
+                <button id="login-btn" class="hidden btn-danger py-2">
                     Login
                 </button>
 
                 <div id="user-info" class="hidden flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-white border-2 border-black px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">
-                        <div class="w-6 h-6 bg-[#5ce1e6] border-2 border-black flex items-center justify-center">
-                            <span class="font-mono text-[10px] font-bold text-black" id="user-avatar-initials">U</span>
+                    <div class="flex items-center gap-2 bg-white border-2 border-ink px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">
+                        <div class="w-6 h-6 bg-cyan border-2 border-ink flex items-center justify-center">
+                            <span class="font-mono text-[10px] font-bold text-ink" id="user-avatar-initials">U</span>
                         </div>
-                        <span id="user-name" class="hidden sm:inline font-mono text-xs font-bold text-black uppercase"></span>
+                        <span id="user-name" class="hidden sm:inline font-mono text-xs font-bold text-ink uppercase"></span>
                     </div>
-                    <button id="logout-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-3 py-2 hover:bg-black hover:text-white transition-colors duration-0">Logout</button>
+                    <button id="logout-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-3 py-2 hover:bg-ink hover:text-white transition-colors duration-0">Logout</button>
                 </div>
+                
+                <!-- Hamburger Menu Toggle (Mobile Only) -->
+                <button id="btn-mobile-menu" class="md:hidden w-10 h-10 border-2 border-ink flex items-center justify-center text-ink hover:bg-cyan transition-colors duration-0" aria-label="Toggle mobile menu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t-2 border-ink bg-white w-full absolute left-0 z-40 shadow-[0_8px_0_0_#0b0b0b]">
+            <div class="flex flex-col font-mono uppercase text-sm font-bold">
+                <a href="/jobs" class="nav-link w-full text-left px-6 py-4 text-ink hover:bg-cyan border-b-2 border-ink transition-colors duration-0 block">Browse Jobs</a>
+                <a href="/dashboard" class="nav-link w-full text-left px-6 py-4 text-ink hover:bg-cyan border-b-2 border-ink transition-colors duration-0 block">Dashboard</a>
             </div>
         </div>
     </nav>
