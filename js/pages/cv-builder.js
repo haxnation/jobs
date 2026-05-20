@@ -26,25 +26,25 @@ export async function renderCvBuilder(skipFetch = false) {
 
     return `
         <div class="mb-8">
-            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-black inline-block px-2 border-2 border-black">CV Builder</p>
-            <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
+            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-ink inline-block px-2 border-2 border-ink">CV Builder</p>
+            <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter leading-none border-b-4 border-ink pb-4">
                 Build Your CV
             </h1>
         </div>
 
         <!-- Action Bar -->
         <div class="flex flex-wrap gap-3 mb-8">
-            <button id="cv-save-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-black text-white border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#5ce1e6] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#5ce1e6] transition-all duration-75">💾 Save CV</button>
-            <button id="cv-export-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📄 Export PDF</button>
-            <button id="cv-upload-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📤 Import PDF</button>
+            <button id="cv-save-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-ink text-white border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">💾 Save CV</button>
+            <button id="cv-export-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📄 Export PDF</button>
+            <button id="cv-upload-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📤 Import PDF</button>
             <input type="file" id="cv-pdf-input" accept=".pdf" class="hidden">
-            <a href="/dashboard" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">← Dashboard</a>
+            <a href="/dashboard" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">← Dashboard</a>
         </div>
         <p id="cv-status" class="mb-4 font-mono text-xs font-bold hidden"></p>
 
         <!-- Personal Info -->
-        <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
-            <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Personal Information</h3>
+        <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
+            <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Personal Information</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 ${personalField('cv-name', 'Full Name', cvData.personalInfo.name)}
                 ${personalField('cv-email', 'Email', cvData.personalInfo.email, 'email')}
@@ -55,37 +55,37 @@ export async function renderCvBuilder(skipFetch = false) {
             </div>
             <div class="mt-4">
                 <label class="font-mono text-xs font-bold uppercase block mb-1">Professional Summary</label>
-                <textarea id="cv-summary" rows="3" class="w-full border-2 border-black p-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]">${esc(cvData.personalInfo.summary)}</textarea>
+                <textarea id="cv-summary" rows="3" class="w-full border-2 border-ink p-2 font-mono text-sm focus:outline-none focus:border-cyan">${esc(cvData.personalInfo.summary)}</textarea>
             </div>
         </div>
 
         <!-- Education -->
-        <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
-            <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
+        <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
+            <div class="flex justify-between items-center border-b-2 border-ink pb-2 mb-4">
                 <h3 class="font-bold uppercase tracking-widest">Education</h3>
-                <button id="add-edu-btn" class="font-mono text-xs font-bold uppercase bg-[#5ce1e6] text-black border-2 border-black px-3 py-1 hover:bg-black hover:text-white transition-colors duration-0">+ Add</button>
+                <button id="add-edu-btn" class="font-mono text-xs font-bold uppercase bg-cyan text-ink border-2 border-ink px-3 py-1 hover:bg-ink hover:text-white transition-colors duration-0">+ Add</button>
             </div>
             <div id="edu-list">${cvData.education.map((e, i) => eduBlock(e, i)).join('')}</div>
         </div>
 
         <!-- Experience -->
-        <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
-            <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
+        <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
+            <div class="flex justify-between items-center border-b-2 border-ink pb-2 mb-4">
                 <h3 class="font-bold uppercase tracking-widest">Work Experience</h3>
-                <button id="add-exp-btn" class="font-mono text-xs font-bold uppercase bg-[#5ce1e6] text-black border-2 border-black px-3 py-1 hover:bg-black hover:text-white transition-colors duration-0">+ Add</button>
+                <button id="add-exp-btn" class="font-mono text-xs font-bold uppercase bg-cyan text-ink border-2 border-ink px-3 py-1 hover:bg-ink hover:text-white transition-colors duration-0">+ Add</button>
             </div>
             <div id="exp-list">${cvData.experience.map((e, i) => expBlock(e, i)).join('')}</div>
         </div>
 
         <!-- Skills -->
-        <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
-            <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
+        <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6">
+            <div class="flex justify-between items-center border-b-2 border-ink pb-2 mb-4">
                 <h3 class="font-bold uppercase tracking-widest">Skills</h3>
             </div>
-            <div class="flex flex-wrap gap-2 mb-3" id="skills-tags">${cvData.skills.map((s, i) => `<span class="inline-flex items-center gap-1 bg-black text-white font-mono text-xs px-3 py-1 border-2 border-black">${esc(s)} <button class="remove-skill ml-1 text-[#ff2a2a] font-bold hover:text-white" data-idx="${i}">×</button></span>`).join('')}</div>
+            <div class="flex flex-wrap gap-2 mb-3" id="skills-tags">${cvData.skills.map((s, i) => `<span class="inline-flex items-center gap-1 bg-ink text-white font-mono text-xs px-3 py-1 border-2 border-ink">${esc(s)} <button class="remove-skill ml-1 text-danger font-bold hover:text-white" data-idx="${i}">×</button></span>`).join('')}</div>
             <div class="flex gap-2">
-                <input id="skill-input" type="text" placeholder="Add a skill..." class="flex-1 border-2 border-black p-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]">
-                <button id="add-skill-btn" class="font-mono text-xs font-bold uppercase bg-black text-white border-2 border-black px-4 py-2 hover:bg-[#5ce1e6] hover:text-black transition-colors duration-0">Add</button>
+                <input id="skill-input" type="text" placeholder="Add a skill..." class="flex-1 border-2 border-ink p-2 font-mono text-sm focus:outline-none focus:border-cyan">
+                <button id="add-skill-btn" class="font-mono text-xs font-bold uppercase bg-ink text-white border-2 border-ink px-4 py-2 hover:bg-cyan hover:text-ink transition-colors duration-0">Add</button>
             </div>
         </div>
 
@@ -93,53 +93,53 @@ export async function renderCvBuilder(skipFetch = false) {
         <div id="custom-sections-container">
             ${(cvData.customSections || []).map((sec, sIdx) => customSectionBlock(sec, sIdx)).join('')}
         </div>
-        <button id="add-custom-section-btn" class="mb-8 font-mono text-xs font-bold uppercase bg-white text-black border-2 border-black px-4 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">+ Add Custom Section</button>
+        <button id="add-custom-section-btn" class="mb-8 font-mono text-xs font-bold uppercase bg-white text-ink border-2 border-ink px-4 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">+ Add Custom Section</button>
     `;
 }
 
 function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
 function personalField(id, label, val, type = 'text') {
-    return `<div><label class="font-mono text-xs font-bold uppercase block mb-1">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" class="w-full border-2 border-black p-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"></div>`;
+    return `<div><label class="font-mono text-xs font-bold uppercase block mb-1">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" class="w-full border-2 border-ink p-2 font-mono text-sm focus:outline-none focus:border-cyan"></div>`;
 }
 
 function eduBlock(e, i) {
     return `<div class="edu-entry border-2 border-dashed border-gray-400 p-4 mb-3" data-idx="${i}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Education #${i + 1}</span><button class="remove-edu font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Education #${i + 1}</span><button class="remove-edu font-mono text-xs font-bold text-danger uppercase" data-idx="${i}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">School</label><input class="edu-school w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.school)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Degree</label><input class="edu-degree w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.degree)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Field of Study</label><input class="edu-field w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.field)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">GPA</label><input class="edu-gpa w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.gpa)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Start Date</label><input class="edu-start w-full border-2 border-black p-2 font-mono text-sm" placeholder="e.g. Sep 2020" value="${esc(e.startDate)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">End Date</label><input class="edu-end w-full border-2 border-black p-2 font-mono text-sm" placeholder="e.g. Jun 2024" value="${esc(e.endDate)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">School</label><input class="edu-school w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.school)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Degree</label><input class="edu-degree w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.degree)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Field of Study</label><input class="edu-field w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.field)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">GPA</label><input class="edu-gpa w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.gpa)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Start Date</label><input class="edu-start w-full border-2 border-ink p-2 font-mono text-sm" placeholder="e.g. Sep 2020" value="${esc(e.startDate)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">End Date</label><input class="edu-end w-full border-2 border-ink p-2 font-mono text-sm" placeholder="e.g. Jun 2024" value="${esc(e.endDate)}"></div>
         </div>
-        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="edu-desc w-full border-2 border-black p-2 font-mono text-sm" rows="2">${esc(e.description)}</textarea></div>
+        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="edu-desc w-full border-2 border-ink p-2 font-mono text-sm" rows="2">${esc(e.description)}</textarea></div>
     </div>`;
 }
 
 function expBlock(e, i) {
     return `<div class="exp-entry border-2 border-dashed border-gray-400 p-4 mb-3" data-idx="${i}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Experience #${i + 1}</span><button class="remove-exp font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-idx="${i}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Experience #${i + 1}</span><button class="remove-exp font-mono text-xs font-bold text-danger uppercase" data-idx="${i}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Company</label><input class="exp-company w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.company)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Job Title</label><input class="exp-title w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.title)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Location</label><input class="exp-location w-full border-2 border-black p-2 font-mono text-sm" value="${esc(e.location)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Start Date</label><input class="exp-start w-full border-2 border-black p-2 font-mono text-sm" placeholder="e.g. Jan 2022" value="${esc(e.startDate)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">End Date</label><input class="exp-end w-full border-2 border-black p-2 font-mono text-sm" placeholder="e.g. Present" value="${esc(e.endDate)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Company</label><input class="exp-company w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.company)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Job Title</label><input class="exp-title w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.title)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Location</label><input class="exp-location w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(e.location)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Start Date</label><input class="exp-start w-full border-2 border-ink p-2 font-mono text-sm" placeholder="e.g. Jan 2022" value="${esc(e.startDate)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">End Date</label><input class="exp-end w-full border-2 border-ink p-2 font-mono text-sm" placeholder="e.g. Present" value="${esc(e.endDate)}"></div>
         </div>
-        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="exp-desc w-full border-2 border-black p-2 font-mono text-sm" rows="3">${esc(e.description)}</textarea></div>
+        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="exp-desc w-full border-2 border-ink p-2 font-mono text-sm" rows="3">${esc(e.description)}</textarea></div>
     </div>`;
 }
 
 function customSectionBlock(sec, sIdx) {
     return `
-        <div class="custom-section bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6" data-sidx="${sIdx}">
-            <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
-                <input class="custom-sec-title font-bold uppercase tracking-widest text-lg border-none focus:outline-none focus:border-b-2 focus:border-[#5ce1e6] bg-transparent" value="${esc(sec.title)}" placeholder="Section Title">
+        <div class="custom-section bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] mb-6" data-sidx="${sIdx}">
+            <div class="flex justify-between items-center border-b-2 border-ink pb-2 mb-4">
+                <input class="custom-sec-title font-bold uppercase tracking-widest text-lg border-none focus:outline-none focus:border-b-2 focus:border-cyan bg-transparent" value="${esc(sec.title)}" placeholder="Section Title">
                 <div class="flex gap-2">
-                    <button class="add-custom-item font-mono text-xs font-bold uppercase bg-black text-white border-2 border-black px-3 py-1 hover:bg-[#5ce1e6] hover:text-black transition-colors duration-0" data-sidx="${sIdx}">+ Add Item</button>
-                    <button class="remove-custom-section font-mono text-xs font-bold text-[#ff2a2a] uppercase border-2 border-[#ff2a2a] px-3 py-1 hover:bg-[#ff2a2a] hover:text-white bg-white" data-sidx="${sIdx}">Remove Section</button>
+                    <button class="add-custom-item font-mono text-xs font-bold uppercase bg-ink text-white border-2 border-ink px-3 py-1 hover:bg-cyan hover:text-ink transition-colors duration-0" data-sidx="${sIdx}">+ Add Item</button>
+                    <button class="remove-custom-section font-mono text-xs font-bold text-danger uppercase border-2 border-danger px-3 py-1 hover:bg-danger hover:text-white bg-white" data-sidx="${sIdx}">Remove Section</button>
                 </div>
             </div>
             <div class="custom-items-list" data-sidx="${sIdx}">
@@ -151,13 +151,13 @@ function customSectionBlock(sec, sIdx) {
 
 function customItemBlock(item, sIdx, iIdx) {
     return `<div class="custom-item border-2 border-dashed border-gray-400 p-4 mb-3" data-sidx="${sIdx}" data-iidx="${iIdx}">
-        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Item #${iIdx + 1}</span><button class="remove-custom-item font-mono text-xs font-bold text-[#ff2a2a] uppercase" data-sidx="${sIdx}" data-iidx="${iIdx}">Remove</button></div>
+        <div class="flex justify-between mb-2"><span class="font-mono text-xs font-bold uppercase text-gray-500">Item #${iIdx + 1}</span><button class="remove-custom-item font-mono text-xs font-bold text-danger uppercase" data-sidx="${sIdx}" data-iidx="${iIdx}">Remove</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Title</label><input class="ci-title w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.title)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Subtitle</label><input class="ci-subtitle w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.subtitle)}"></div>
-            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Date / Details</label><input class="ci-date w-full border-2 border-black p-2 font-mono text-sm" value="${esc(item.date)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Title</label><input class="ci-title w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(item.title)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Subtitle</label><input class="ci-subtitle w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(item.subtitle)}"></div>
+            <div><label class="font-mono text-xs font-bold uppercase block mb-1">Date / Details</label><input class="ci-date w-full border-2 border-ink p-2 font-mono text-sm" value="${esc(item.date)}"></div>
         </div>
-        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="ci-desc w-full border-2 border-black p-2 font-mono text-sm" rows="2">${esc(item.description)}</textarea></div>
+        <div class="mt-2"><label class="font-mono text-xs font-bold uppercase block mb-1">Description</label><textarea class="ci-desc w-full border-2 border-ink p-2 font-mono text-sm" rows="2">${esc(item.description)}</textarea></div>
     </div>`;
 }
 
@@ -204,7 +204,7 @@ function showStatus(msg, ok) {
     const el = document.getElementById('cv-status');
     if (!el) return;
     el.textContent = msg;
-    el.className = `mb-4 font-mono text-xs font-bold ${ok ? 'text-green-700' : 'text-[#ff2a2a]'}`;
+    el.className = `mb-4 font-mono text-xs font-bold ${ok ? 'text-green-700' : 'text-danger'}`;
     el.classList.remove('hidden');
     if (ok) setTimeout(() => el.classList.add('hidden'), 3000);
 }
@@ -638,6 +638,6 @@ function attachRemoveHandlers() {
 function renderSkillTags() {
     const container = document.getElementById('skills-tags');
     if (!container) return;
-    container.innerHTML = cvData.skills.map((s, i) => `<span class="inline-flex items-center gap-1 bg-black text-white font-mono text-xs px-3 py-1 border-2 border-black">${esc(s)} <button class="remove-skill ml-1 text-[#ff2a2a] font-bold hover:text-white" data-idx="${i}">×</button></span>`).join('');
+    container.innerHTML = cvData.skills.map((s, i) => `<span class="inline-flex items-center gap-1 bg-ink text-white font-mono text-xs px-3 py-1 border-2 border-ink">${esc(s)} <button class="remove-skill ml-1 text-danger font-bold hover:text-white" data-idx="${i}">×</button></span>`).join('');
     attachRemoveHandlers();
 }

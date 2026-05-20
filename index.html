@@ -5,18 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HaxNation Jobs</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="/js/aws-intercept.js"></script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
-        body { font-family: 'JetBrains Mono', monospace; }
-    </style>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#fafafa', ink: '#0b0b0b',
+                        cyan: '#5ce1e6', danger: '#ff2a2a',
+                        success: '#00e676', warning: '#ffeb3b'
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn-primary {
+                @apply font-mono uppercase tracking-widest font-bold bg-cyan text-ink border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75 focus:outline-none focus:ring-2 focus:ring-cyan focus:ring-offset-2;
+            }
+            .btn-danger {
+                @apply font-mono uppercase tracking-widest font-bold bg-danger text-white border-2 border-ink px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75 focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2;
+            }
+            .btn-secondary {
+                @apply font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 hover:bg-ink hover:text-white transition-colors duration-0 shadow-[2px_2px_0_0_#0b0b0b] focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2;
+            }
+            .card {
+                @apply bg-white border-2 border-ink p-6 shadow-[6px_6px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#0b0b0b] transition-all duration-75;
+            }
+            .input {
+                @apply border-2 border-ink bg-white p-3 font-mono text-sm rounded-none focus:outline-none focus:ring-0 focus:border-cyan focus:bg-ink focus:text-cyan transition-colors duration-75 w-full shadow-[inset_2px_2px_0_0_#e5e5e5];
+            }
+            .label {
+                @apply font-mono text-[10px] font-bold uppercase mb-1 block text-ink;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen text-[#0b0b0b] bg-[#fafafa] bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)] bg-[size:32px_32px] selection:bg-[#5ce1e6] selection:text-black">
+<body class="font-sans min-h-screen text-ink bg-canvas bg-[linear-gradient(to_right,#80808020_1px,transparent_1px),linear-gradient(to_bottom,#80808020_1px,transparent_1px)] bg-[size:32px_32px] selection:bg-cyan selection:text-ink">
     
     <nav class="sticky top-0 z-50 border-b-2 border-black bg-white">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
@@ -34,19 +71,32 @@
             </div>
 
             <div id="auth-section" class="flex items-center gap-3">
-                <button id="login-btn" class="hidden font-mono uppercase tracking-widest font-bold bg-[#ff2a2a] text-white border-2 border-black px-6 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75">
+                <button id="login-btn" class="hidden btn-danger py-2">
                     Login
                 </button>
 
                 <div id="user-info" class="hidden flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-white border-2 border-black px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">
-                        <div class="w-6 h-6 bg-[#5ce1e6] border-2 border-black flex items-center justify-center">
-                            <span class="font-mono text-[10px] font-bold text-black" id="user-avatar-initials">U</span>
+                    <div class="flex items-center gap-2 bg-white border-2 border-ink px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">
+                        <div class="w-6 h-6 bg-cyan border-2 border-ink flex items-center justify-center">
+                            <span class="font-mono text-[10px] font-bold text-ink" id="user-avatar-initials">U</span>
                         </div>
-                        <span id="user-name" class="hidden sm:inline font-mono text-xs font-bold text-black uppercase"></span>
+                        <span id="user-name" class="hidden sm:inline font-mono text-xs font-bold text-ink uppercase"></span>
                     </div>
-                    <button id="logout-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-3 py-2 hover:bg-black hover:text-white transition-colors duration-0">Logout</button>
+                    <button id="logout-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-3 py-2 hover:bg-ink hover:text-white transition-colors duration-0">Logout</button>
                 </div>
+                
+                <!-- Hamburger Menu Toggle (Mobile Only) -->
+                <button id="btn-mobile-menu" class="md:hidden w-10 h-10 border-2 border-ink flex items-center justify-center text-ink hover:bg-cyan transition-colors duration-0" aria-label="Toggle mobile menu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t-2 border-ink bg-white w-full absolute left-0 z-40 shadow-[0_8px_0_0_#0b0b0b]">
+            <div class="flex flex-col font-mono uppercase text-sm font-bold">
+                <a href="/jobs" class="nav-link w-full text-left px-6 py-4 text-ink hover:bg-cyan border-b-2 border-ink transition-colors duration-0 block">Browse Jobs</a>
+                <a href="/dashboard" class="nav-link w-full text-left px-6 py-4 text-ink hover:bg-cyan border-b-2 border-ink transition-colors duration-0 block">Dashboard</a>
             </div>
         </div>
     </nav>

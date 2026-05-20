@@ -4,10 +4,10 @@ import { navigate } from '../app.js';
 export async function renderJobCreate() {
     return `
         <div class="max-w-2xl mx-auto mt-10">
-            <div class="bg-white border-4 border-black shadow-[12px_12px_0_0_#5ce1e6] p-0">
-                <div class="bg-black text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-black">
+            <div class="bg-white border-4 border-ink shadow-[12px_12px_0_0_#0b0b0b] p-0">
+                <div class="bg-ink text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-ink">
                     <span class="uppercase tracking-widest">Post a New Job</span>
-                    <a href="/dashboard" class="nav-link text-white hover:bg-[#5ce1e6] hover:text-black px-2 py-1 transition-colors duration-0 border border-transparent hover:border-black uppercase">[X] Cancel</a>
+                    <a href="/dashboard" class="nav-link text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">[X] Cancel</a>
                 </div>
 
                 <div class="p-6 sm:p-10">
@@ -19,7 +19,7 @@ export async function renderJobCreate() {
                             id="job-title"
                             type="text"
                             placeholder="e.g. Senior Backend Engineer"
-                            class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                            class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                         >
                     </div>
 
@@ -31,7 +31,7 @@ export async function renderJobCreate() {
                             id="job-description"
                             rows="6"
                             placeholder="Describe the role, responsibilities, and requirements..."
-                            class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] resize-y"
+                            class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan resize-y"
                         ></textarea>
                     </div>
 
@@ -44,7 +44,7 @@ export async function renderJobCreate() {
                                 id="job-company"
                                 type="text"
                                 placeholder="e.g. Google, Acme Corp"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                             >
                         </div>
 
@@ -54,7 +54,7 @@ export async function renderJobCreate() {
                             </label>
                             <select
                                 id="job-manager-role"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] bg-white"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan bg-white"
                             >
                                 <option value="hiring">🏢 Hiring Directly</option>
                                 <option value="referring">🤝 Referring</option>
@@ -74,7 +74,7 @@ export async function renderJobCreate() {
                                 id="job-location"
                                 type="text"
                                 placeholder="e.g. Mumbai, India"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                             >
                         </div>
 
@@ -85,7 +85,7 @@ export async function renderJobCreate() {
 
                             <select
                                 id="job-location-type"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] bg-white"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan bg-white"
                             >
                                 <option value="remote">Remote</option>
                                 <option value="onsite">On-site</option>
@@ -106,7 +106,7 @@ export async function renderJobCreate() {
                                 min="0"
                                 max="30"
                                 placeholder="2"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                             >
                         </div>
 
@@ -119,23 +119,23 @@ export async function renderJobCreate() {
                                 id="job-skills"
                                 type="text"
                                 placeholder="Node.js, AWS, React"
-                                class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                                class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                             >
                         </div>
                     </div>
 
                     <!-- Custom Questions -->
-                    <div class="mb-6 border-2 border-black">
-                        <div class="bg-black text-white px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest flex justify-between items-center">
+                    <div class="mb-6 border-2 border-ink">
+                        <div class="bg-ink text-white px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest flex justify-between items-center">
                             <span>
                                 Custom Application Questions
-                                <span class="text-[#5ce1e6]">(optional, max 5)</span>
+                                <span class="text-cyan">(optional, max 5)</span>
                             </span>
 
                             <button
                                 id="add-question-btn"
                                 type="button"
-                                class="bg-[#5ce1e6] text-black border border-black px-3 py-0.5 hover:bg-white transition-colors duration-0 font-bold"
+                                class="bg-cyan text-ink border border-ink px-3 py-0.5 hover:bg-white transition-colors duration-0 font-bold"
                             >
                                 + Add
                             </button>
@@ -153,7 +153,7 @@ export async function renderJobCreate() {
 
                     <button
                         id="create-job-btn"
-                        class="w-full font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-8 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75"
+                        class="btn-primary w-full"
                     >
                         Create Job Opening
                     </button>
@@ -192,7 +192,7 @@ function renderQuestionRow(q, index) {
             <div class="flex gap-2 mb-2">
                 <input
                     type="text"
-                    class="question-text flex-1 border-2 border-black px-3 py-1.5 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                    class="question-text flex-1 border-2 border-ink px-3 py-1.5 font-mono text-sm focus:outline-none focus:border-cyan"
                     placeholder="Question text..."
                     value="${q.question.replace(/"/g, '&quot;')}"
                     maxlength="300"
@@ -200,7 +200,7 @@ function renderQuestionRow(q, index) {
 
                 <button
                     type="button"
-                    class="remove-question-btn font-mono text-xs font-bold uppercase bg-white border-2 border-black px-3 py-1 hover:bg-red-100 transition-colors duration-0"
+                    class="remove-question-btn font-mono text-xs font-bold uppercase bg-white border-2 border-ink px-3 py-1 hover:bg-red-100 transition-colors duration-0"
                     data-index="${index}"
                 >
                     ✕
@@ -209,7 +209,7 @@ function renderQuestionRow(q, index) {
 
             <div class="flex flex-wrap gap-3 items-center">
                 <select
-                    class="question-type border-2 border-black px-2 py-1 font-mono text-xs bg-white focus:outline-none focus:border-[#5ce1e6]"
+                    class="question-type border-2 border-ink px-2 py-1 font-mono text-xs bg-white focus:outline-none focus:border-cyan"
                     data-index="${index}"
                 >
                     ${typeOptions}
@@ -218,7 +218,7 @@ function renderQuestionRow(q, index) {
                 <label class="flex items-center gap-1.5 font-mono text-xs font-bold uppercase cursor-pointer select-none">
                     <input
                         type="checkbox"
-                        class="question-required w-4 h-4 border-2 border-black accent-black"
+                        class="question-required w-4 h-4 border-2 border-ink accent-black"
                         ${q.required ? 'checked' : ''}
                     >
                     Required
@@ -229,7 +229,7 @@ function renderQuestionRow(q, index) {
             <div class="mt-2">
                 <input
                     type="text"
-                    class="question-options w-full border-2 border-black px-3 py-1.5 font-mono text-xs focus:outline-none focus:border-[#5ce1e6]"
+                    class="question-options w-full border-2 border-ink px-3 py-1.5 font-mono text-xs focus:outline-none focus:border-cyan"
                     placeholder="Options (comma separated, max 5)..."
                     value="${(q.options || []).join(', ')}"
                 >

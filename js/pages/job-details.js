@@ -2,10 +2,10 @@ import { apiCall } from '../api.js';
 
 export async function renderJobDetails(jobId) {
     return `
-        <div class="bg-white border-4 border-black shadow-[12px_12px_0_0_#5ce1e6] p-0 max-w-4xl mx-auto mt-6 relative">
-            <div class="bg-black text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-black">
+        <div class="bg-white border-4 border-ink shadow-[12px_12px_0_0_#0b0b0b] p-0 max-w-4xl mx-auto mt-6 relative">
+            <div class="bg-ink text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-ink">
                 <span class="uppercase tracking-widest">JOB DETAILS</span>
-                <a href="/jobs" class="nav-link text-white hover:bg-[#5ce1e6] hover:text-black px-2 py-1 transition-colors duration-0 border border-transparent hover:border-black uppercase">
+                <a href="/jobs" class="nav-link text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">
                     [X] Close
                 </a>
             </div>
@@ -27,32 +27,32 @@ export function attachJobDetailsEvents(jobId) {
             const questionsHtml = buildQuestionsHtml(job.customQuestions);
 
             const roleBadge = job.managerRole === 'referring'
-                ? '<span class="border-2 border-black px-3 py-1 font-mono text-xs font-bold uppercase bg-[#ffd700] text-black shadow-[2px_2px_0_0_#0b0b0b]">🤝 Referral</span>'
-                : '<span class="border-2 border-black px-3 py-1 font-mono text-xs font-bold uppercase bg-[#5ce1e6] text-black shadow-[2px_2px_0_0_#0b0b0b]">🏢 Hiring Directly</span>';
+                ? '<span class="border-2 border-ink px-3 py-1 font-mono text-xs font-bold uppercase bg-[#ffd700] text-ink shadow-[2px_2px_0_0_#0b0b0b]">🤝 Referral</span>'
+                : '<span class="border-2 border-ink px-3 py-1 font-mono text-xs font-bold uppercase bg-cyan text-ink shadow-[2px_2px_0_0_#0b0b0b]">🏢 Hiring Directly</span>';
 
             content.innerHTML = `
-                <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter mb-4 border-b-2 border-black pb-2">${job.title}</h1>
+                <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter mb-4 border-b-2 border-ink pb-2">${job.title}</h1>
                 ${job.clientCompany ? `<p class="font-mono text-lg font-bold mb-2">${escapeHtml(job.clientCompany)}</p>` : ''}
-                <div class="flex flex-wrap gap-3 font-mono text-xs font-bold uppercase mb-8 pb-6 border-b-2 border-black items-center">
+                <div class="flex flex-wrap gap-3 font-mono text-xs font-bold uppercase mb-8 pb-6 border-b-2 border-ink items-center">
                     ${roleBadge}
-                    <span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.location || 'Remote'}</span>
-                    <span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.locationType || 'remote'}</span>
-                    ${job.experienceMin ? `<span class="border-2 border-black bg-[#fafafa] px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.experienceMin}+ yrs exp</span>` : ''}
+                    <span class="border-2 border-ink bg-canvas px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.location || 'Remote'}</span>
+                    <span class="border-2 border-ink bg-canvas px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.locationType || 'remote'}</span>
+                    ${job.experienceMin ? `<span class="border-2 border-ink bg-canvas px-3 py-1 shadow-[2px_2px_0_0_#0b0b0b]">${job.experienceMin}+ yrs exp</span>` : ''}
                 </div>
-                <div class="text-black font-sans leading-relaxed mb-8 text-lg">
+                <div class="text-ink font-sans leading-relaxed mb-8 text-lg">
                     ${job.description || 'No description provided.'}
                 </div>
                 ${job.skills && job.skills.length ? `
                 <div class="mb-8">
-                    <h3 class="font-bold uppercase tracking-widest text-sm mb-3 border-b border-black pb-1">Required Skills</h3>
+                    <h3 class="font-bold uppercase tracking-widest text-sm mb-3 border-b border-ink pb-1">Required Skills</h3>
                     <div class="flex flex-wrap gap-2">
-                        ${job.skills.map(s => `<span class="border-2 border-black bg-[#5ce1e6] px-2 py-1 font-mono text-[10px] font-bold uppercase">${s}</span>`).join('')}
+                        ${job.skills.map(s => `<span class="border-2 border-ink bg-cyan px-2 py-1 font-mono text-[10px] font-bold uppercase">${s}</span>`).join('')}
                     </div>
                 </div>` : ''}
-                <div class="border-2 border-black bg-[#fafafa] p-6 mt-8 shadow-[4px_4px_0_0_#0b0b0b]">
+                <div class="border-2 border-ink bg-canvas p-6 mt-8 shadow-[4px_4px_0_0_#0b0b0b]">
                     ${job.jobUrl ? `<p class="font-mono text-[10px] text-gray-500 uppercase mb-4">Share: <span class="select-all">${job.jobUrl}</span></p>` : ''}
                     ${questionsHtml}
-                    <button id="apply-btn" class="font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-8 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75 ${questionsHtml ? 'mt-6 w-full' : ''}">
+                    <button id="apply-btn" class="btn-primary ${questionsHtml ? 'mt-6 w-full' : ''}">
                         Apply Now
                     </button>
                     <p id="apply-status" class="mt-3 font-mono text-xs hidden"></p>
@@ -117,7 +117,7 @@ function buildQuestionsHtml(questions) {
                     data-question-id="${q.id}"
                     data-question-type="short_text"
                     type="text"
-                    class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6]"
+                    class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
                     placeholder="Your answer…"
                 >`;
                 break;
@@ -127,7 +127,7 @@ function buildQuestionsHtml(questions) {
                     data-question-id="${q.id}"
                     data-question-type="long_text"
                     rows="4"
-                    class="w-full border-2 border-black px-4 py-2 font-mono text-sm focus:outline-none focus:border-[#5ce1e6] resize-y"
+                    class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan resize-y"
                     placeholder="Your answer…"
                 ></textarea>`;
                 break;
@@ -161,7 +161,7 @@ function buildQuestionsHtml(questions) {
     }).join('');
 
     return `
-        <div id="custom-questions" class="mb-6 border-t-2 border-black pt-6">
+        <div id="custom-questions" class="mb-6 border-t-2 border-ink pt-6">
             <h3 class="font-mono text-xs font-bold uppercase tracking-widest mb-5">Application Questions</h3>
             ${fields}
         </div>

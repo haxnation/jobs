@@ -10,50 +10,50 @@ export async function renderDashboard() {
 
     return `
         <div class="mb-10">
-            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-black inline-block px-2 border-2 border-black">Dashboard</p>
-            <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
+            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-ink inline-block px-2 border-2 border-ink">Dashboard</p>
+            <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter leading-none border-b-4 border-ink pb-4">
                 Welcome, ${userName}
             </h1>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b]">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Your Profile</h3>
+            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b]">
+                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Your Profile</h3>
                 <p class="font-mono text-sm mb-2"><strong>Email:</strong> ${userEmail}</p>
                 <p class="font-mono text-sm mb-4"><strong>Roles:</strong> ${accountTypes.join(', ')}</p>
-                <a href="/cv-builder" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white hover:border-white transition-colors duration-0 inline-block">
+                <a href="/cv-builder" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0 inline-block">
                     Manage CV →
                 </a>
             </div>
             
-            <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b]">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Quick Actions</h3>
+            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b]">
+                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Quick Actions</h3>
                 ${isManager ? `
-                    <a href="/jobs/create" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white hover:border-white transition-colors duration-0">Post a Job</a>
-                    <a href="/my-jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-colors duration-0">Manage My Jobs</a>
+                    <a href="/jobs/create" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0">Post a Job</a>
+                    <a href="/my-jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Manage My Jobs</a>
                 ` : ''}
                 ${isApplier ? `
-                    <a href="/jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white hover:border-white transition-colors duration-0">Find Jobs</a>
-                    <a href="/my-applications" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-colors duration-0">My Applications</a>
+                    <a href="/jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0">Find Jobs</a>
+                    <a href="/my-applications" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">My Applications</a>
                 ` : ''}
-                <a href="/pricing" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-colors duration-0">Pricing & Upgrades</a>
-                <a href="/analytics" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-black hover:text-white transition-colors duration-0">Analytics</a>
+                <a href="/pricing" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Pricing & Upgrades</a>
+                <a href="/analytics" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Analytics</a>
             </div>
             
-            <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] md:col-span-2 border-dashed">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-black pb-2 mb-4">Account Roles</h3>
+            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] md:col-span-2 border-dashed">
+                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Account Roles</h3>
                 <p class="font-mono text-xs mb-4">Manage your account roles to switch between finding jobs and posting jobs:</p>
                 <div class="flex flex-wrap gap-4" id="role-toggles">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${accountTypes.includes('APPLIER') ? 'checked' : ''}>
+                        <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${accountTypes.includes('APPLIER') ? 'checked' : ''}>
                         <span class="font-mono text-sm font-bold uppercase">Applier</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-black checked:bg-black focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${accountTypes.includes('MANAGER') ? 'checked' : ''}>
+                        <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${accountTypes.includes('MANAGER') ? 'checked' : ''}>
                         <span class="font-mono text-sm font-bold uppercase">Manager</span>
                     </label>
                 </div>
-                <button id="save-roles-btn" class="mt-4 font-mono text-xs font-bold uppercase tracking-widest bg-black text-white border-2 border-black px-4 py-2 hover:bg-white hover:text-black transition-colors duration-0">
+                <button id="save-roles-btn" class="mt-4 font-mono text-xs font-bold uppercase tracking-widest bg-ink text-white border-2 border-ink px-4 py-2 hover:bg-white hover:text-ink transition-colors duration-0">
                     Save Roles
                 </button>
                 <p id="role-save-status" class="mt-2 font-mono text-xs hidden"></p>

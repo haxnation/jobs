@@ -5,7 +5,7 @@ const app = document.getElementById('app');
 function showLoading() {
     app.innerHTML = `
         <div class="flex items-center justify-center min-h-[50vh]">
-            <div class="w-12 h-12 bg-black border-4 border-[#5ce1e6] shadow-[4px_4px_0_0_#5ce1e6] animate-[spin_1s_steps(4)_infinite]"></div>
+            <div class="w-12 h-12 bg-ink border-4 border-cyan shadow-[4px_4px_0_0_#0b0b0b] animate-[spin_1s_steps(4)_infinite]"></div>
         </div>`;
 }
 
@@ -141,15 +141,15 @@ async function router() {
         }
 
         app.innerHTML = `
-            <div class="text-center mt-20 border-4 border-black bg-white p-8 shadow-[8px_8px_0_0_#ff2a2a] max-w-md mx-auto">
-                <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-black pb-2 mb-6">404 - NOT FOUND<span class="inline-block w-3 h-[1em] bg-[#ff2a2a] animate-pulse align-middle ml-1"></span></h2>
-                <a href="/" class="nav-link block font-mono uppercase tracking-widest font-bold bg-[#5ce1e6] text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-75">RETURN TO HOME</a>
+            <div class="text-center mt-20 border-4 border-ink bg-white p-8 shadow-[8px_8px_0_0_#0b0b0b] max-w-md mx-auto">
+                <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-ink pb-2 mb-6">404 - NOT FOUND<span class="inline-block w-3 h-[1em] bg-danger animate-pulse align-middle ml-1"></span></h2>
+                <a href="/" class="nav-link block btn-primary">RETURN TO HOME</a>
             </div>`;
 
     } catch (error) {
         console.error("Routing error:", error);
         app.innerHTML = `
-            <div class="text-center mt-20 border-4 border-black bg-black text-[#ff2a2a] p-8 shadow-[8px_8px_0_0_#ff2a2a] max-w-md mx-auto">
+            <div class="text-center mt-20 border-4 border-ink bg-ink text-danger p-8 shadow-[8px_8px_0_0_#0b0b0b] max-w-md mx-auto">
                 <h2 class="text-xl font-bold font-mono uppercase">SYSTEM_ERROR</h2>
                 <p class="mt-4 font-mono text-xs text-white">An unexpected error occurred.</p>
             </div>`;
@@ -158,6 +158,8 @@ async function router() {
 
 export function navigate(url) {
     window.history.pushState({}, '', url);
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenu) mobileMenu.classList.add('hidden');
     router();
 }
 
@@ -182,5 +184,12 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
     navigate('/');
     window.location.reload();
 });
+
+const mobileMenuBtn = document.getElementById('btn-mobile-menu');
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+}
 
 document.addEventListener('DOMContentLoaded', router);

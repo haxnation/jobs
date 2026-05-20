@@ -11,24 +11,24 @@ const PLANS = [
 export async function renderPricing() {
     return `
         <div class="mb-10">
-            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-black inline-block px-2 border-2 border-black">Pricing</p>
-            <h1 class="text-4xl sm:text-5xl font-black text-black uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
+            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-ink inline-block px-2 border-2 border-ink">Pricing</p>
+            <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter leading-none border-b-4 border-ink pb-4">
                 Plans & Upgrades
             </h1>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             ${PLANS.map(plan => `
-                <div class="bg-white border-2 border-black p-6 shadow-[4px_4px_0_0_#0b0b0b] flex flex-col">
-                    <div class="flex justify-between items-start border-b-2 border-black pb-3 mb-4">
+                <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] flex flex-col">
+                    <div class="flex justify-between items-start border-b-2 border-ink pb-3 mb-4">
                         <h3 class="font-black text-xl uppercase tracking-tighter">${plan.name}</h3>
-                        <span class="font-mono text-lg font-bold bg-[#5ce1e6] px-2 border-2 border-black">${plan.price}</span>
+                        <span class="font-mono text-lg font-bold bg-cyan px-2 border-2 border-ink">${plan.price}</span>
                     </div>
                     <p class="font-sans text-sm flex-1 mb-6">${plan.description}</p>
                     ${plan.needsJobId ? `
-                        <input type="text" placeholder="Enter Job ID" class="pricing-job-id w-full border-2 border-black px-3 py-2 font-mono text-xs mb-3 focus:outline-none focus:border-[#5ce1e6]" data-plan="${plan.id}">
+                        <input type="text" placeholder="Enter Job ID" class="pricing-job-id w-full border-2 border-ink px-3 py-2 font-mono text-xs mb-3 focus:outline-none focus:border-cyan" data-plan="${plan.id}">
                     ` : ''}
-                    <button class="pricing-buy-btn font-mono text-xs font-bold uppercase tracking-widest bg-black text-white border-2 border-black px-4 py-2 hover:bg-[#5ce1e6] hover:text-black transition-colors duration-0" data-plan="${plan.id}">
+                    <button class="pricing-buy-btn font-mono text-xs font-bold uppercase tracking-widest bg-ink text-white border-2 border-ink px-4 py-2 hover:bg-cyan hover:text-ink transition-colors duration-0" data-plan="${plan.id}">
                         ${plan.cta}
                     </button>
                     <p class="pricing-status mt-2 font-mono text-xs hidden" data-plan="${plan.id}"></p>
