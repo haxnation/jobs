@@ -19,14 +19,11 @@ export async function renderDashboard() {
                 </h1>
             </div>
             <!-- 1. Compact Profile Summary -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border-2 border-ink p-3 shadow-[4px_4px_0_0_#0b0b0b]">
-                <div class="font-mono text-xs leading-relaxed hidden sm:block">
+            <div class="flex items-center gap-4 bg-white border-2 border-ink p-3 shadow-[4px_4px_0_0_#0b0b0b]">
+                <div class="font-mono text-xs leading-relaxed">
                     <strong>Email:</strong> ${userEmail}<br>
                     <strong>Roles:</strong> ${accountTypes.join(', ')}
                 </div>
-                <a href="/cv-builder" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0 whitespace-nowrap">
-                    Manage CV →
-                </a>
             </div>
         </div>
 
@@ -34,37 +31,37 @@ export async function renderDashboard() {
         <div class="mb-10">
             <h3 class="font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-3 h-3 bg-cyan border-2 border-ink inline-block"></span> Quick Actions</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                ${isApplier ? `
-                    <a href="/jobs" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                        <div class="text-2xl mb-2">🔍</div>
-                        Find Jobs
-                    </a>
-                ` : ''}
-                ${isManager ? `
-                    <a href="/jobs/create" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                        <div class="text-2xl mb-2">➕</div>
-                        Post a Job
-                    </a>
-                ` : ''}
-                ${isApplier ? `
-                    <a href="/my-applications" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                        <div class="text-2xl mb-2">📁</div>
-                        My Applications
-                    </a>
-                ` : ''}
-                ${isManager ? `
-                    <a href="/my-jobs" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                        <div class="text-2xl mb-2">📋</div>
-                        Manage My Jobs
-                    </a>
-                ` : ''}
-                <a href="/analytics" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                    <div class="text-2xl mb-2">📈</div>
-                    Analytics
+                <a href="/cv-builder" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-cyan text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">CV</span>
+                    <span class="text-[10px] tracking-widest opacity-90">Manage Profile</span>
                 </a>
-                <a href="/pricing" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                    <div class="text-2xl mb-2">💎</div>
-                    Pricing & Upgrades
+                ${isApplier ? `
+                    <a href="/jobs" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">FIND</span>
+                        <span class="text-[10px] tracking-widest opacity-90">Job Openings</span>
+                    </a>
+                    <a href="/my-applications" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">APPS</span>
+                        <span class="text-[10px] tracking-widest opacity-90">My Applications</span>
+                    </a>
+                ` : ''}
+                ${isManager ? `
+                    <a href="/jobs/create" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-cyan text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">POST</span>
+                        <span class="text-[10px] tracking-widest opacity-90">A New Job</span>
+                    </a>
+                    <a href="/my-jobs" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">JOBS</span>
+                        <span class="text-[10px] tracking-widest opacity-90">Manage Postings</span>
+                    </a>
+                ` : ''}
+                <a href="/analytics" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">STATS</span>
+                    <span class="text-[10px] tracking-widest opacity-90">Analytics</span>
+                </a>
+                <a href="/pricing" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">PRO</span>
+                    <span class="text-[10px] tracking-widest opacity-90">Upgrades</span>
                 </a>
             </div>
         </div>
