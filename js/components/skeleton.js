@@ -16,7 +16,31 @@ export function renderSkeleton(route = '') {
         </div>
     `;
 
-    if (route.includes('/create') || route.includes('/kanban') || route.includes('/cv-builder')) {
+    if (route.includes('/kanban')) {
+        content = `
+            <div class="mb-4 flex justify-between items-end border-b-4 border-ink pb-4 gap-4 animate-pulse">
+                <div class="h-10 bg-gray-200 w-64"></div>
+                <div class="h-10 bg-gray-200 w-48 border-2 border-ink"></div>
+            </div>
+            <div class="mb-6 h-16 bg-gray-200 border-2 border-ink shadow-[4px_4px_0_0_#0b0b0b] w-full animate-pulse"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 items-start animate-pulse">
+                ${Array(4).fill('').map(() => `
+                    <div class="bg-canvas border-2 border-ink shadow-[4px_4px_0_0_#0b0b0b] flex flex-col">
+                        <div class="bg-ink p-3 border-b-2 border-ink h-10 w-full"></div>
+                        <div class="p-3 flex-1 flex flex-col gap-3">
+                            ${Array(3).fill('').map(() => `
+                                <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2">
+                                    <div class="h-6 bg-gray-200 w-3/4"></div>
+                                    <div class="h-3 bg-gray-200 w-1/2 mt-1"></div>
+                                    <div class="h-10 bg-gray-200 w-full mt-2"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else if (route.includes('/create') || route.includes('/cv-builder')) {
         // Form/Single view skeleton
         content = `
             <div class="max-w-2xl mx-auto mt-10 animate-pulse">

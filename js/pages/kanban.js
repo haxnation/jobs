@@ -66,7 +66,13 @@ export async function renderKanban(jobId) {
                         <span class="kanban-count text-[10px] bg-cyan text-ink px-2 py-0.5 border border-ink">0</span>
                     </div>
                     <div class="p-3 flex-1 flex flex-col gap-3 kanban-column" data-status="${status}">
-                        <div class="kanban-placeholder text-sm font-mono text-gray-500 italic">Loading...</div>
+                        ${Array(3).fill('').map(() => `
+                            <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 animate-pulse">
+                                <div class="h-6 bg-gray-200 w-3/4"></div>
+                                <div class="h-3 bg-gray-200 w-1/2 mt-1"></div>
+                                <div class="h-10 bg-gray-200 w-full mt-2"></div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `).join('')}
@@ -103,7 +109,13 @@ export function attachKanbanEvents(jobId) {
         const col = document.querySelector(`.kanban-column[data-status="${status}"]`);
         
         if (col) {
-            col.innerHTML = '<div class="kanban-placeholder text-sm font-mono text-gray-500 italic">Loading...</div>';
+            col.innerHTML = Array(3).fill('').map(() => `
+                <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 animate-pulse">
+                    <div class="h-6 bg-gray-200 w-3/4"></div>
+                    <div class="h-3 bg-gray-200 w-1/2 mt-1"></div>
+                    <div class="h-10 bg-gray-200 w-full mt-2"></div>
+                </div>
+            `).join('');
         }
 
         const res = await apiCall(`/jobs/${jobId}/applications?status=${status}&page=${page}&limit=10&search=${encodeURIComponent(searchQuery)}`);
