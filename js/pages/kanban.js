@@ -1,4 +1,5 @@
 import { apiCall } from '../api.js';
+import { showModal } from '../components/notifications.js';
 
 let searchQuery = '';
 let pageState = {
@@ -94,7 +95,11 @@ export function attachKanbanEvents(jobId) {
         if (countEl) countEl.textContent = pagination ? pagination.totalItems : apps.length;
 
         if (!apps || apps.length === 0) {
-            col.innerHTML = `<div class="kanban-placeholder text-sm font-mono text-gray-500 italic">No candidates</div>`;
+            if (searchQuery) {
+                col.innerHTML = `<div class="kanban-placeholder text-xs font-mono text-gray-500 italic p-2 border-2 border-dashed border-gray-300">No matches for "${searchQuery}". Try searching by ID instead.</div>`;
+            } else {
+                col.innerHTML = `<div class="kanban-placeholder text-xs font-mono text-gray-500 italic p-2 border-2 border-dashed border-gray-300">No candidates</div>`;
+            }
             return;
         }
 
@@ -147,7 +152,14 @@ export function attachKanbanEvents(jobId) {
                     loadColumn(jobId, currentStatus);
                     loadColumn(jobId, newStatus);
                 } else {
-                    alert(res.error || 'Failed to update status');
+                    showModal({
+                        title: 'Update Failed',
+                        what: res.error?.what || 'Failed to update candidate status.',
+                        why: res.error?.why || 'An unknown error occurred.',
+                        nextStepLabel: res.error?.nextStepLabel || 'Dismiss',
+                        nextStepAction: res.error?.nextStepAction,
+                        isSystemFault: res.error?.isSystemFault
+                    });
                     e.target.value = currentStatus;
                     e.target.disabled = false;
                 }
@@ -265,7 +277,17 @@ export function attachKanbanEvents(jobId) {
                         ${customSectionsHtml}
                     `;
                 } else {
-                    content.innerHTML = `<p class="font-mono font-bold text-danger uppercase border-2 border-danger p-4 text-center">Failed to load details: ${res.error}</p>`;
+                    content.innerHTML = `
+                        <div class="py-12 text-center">
+                            <h3 class="font-black text-2xl uppercase tracking-tighter mb-4 text-danger">Details Unavailable</h3>
+                            <p class="font-mono text-sm mb-2 text-ink">${res.error?.what || 'Failed to load details.'}</p>
+                            ${res.error?.why ? `<p class="font-mono text-sm text-gray-600 mb-6">${res.error.why}</p>` : ''}
+                            <button id="modal-dismiss-btn" class="font-mono uppercase tracking-widest font-bold bg-white text-ink border-2 border-ink px-6 py-2 hover:bg-ink hover:text-white transition-colors duration-0 shadow-[4px_4px_0_0_#0b0b0b]">Dismiss</button>
+                        </div>
+                    `;
+                    document.getElementById('modal-dismiss-btn')?.addEventListener('click', () => {
+                        document.getElementById('app-modal').classList.add('hidden');
+                    });
                 }
             });
         });

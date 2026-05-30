@@ -24,7 +24,14 @@ export function attachMyJobsEvents() {
         const res = await apiCall('/jobs/mine');
 
         if (!res.success || !Array.isArray(res.data)) {
-            container.innerHTML = `<p class="font-mono text-sm text-red-600">Failed to load jobs.</p>`;
+            container.innerHTML = `
+                <div class="py-16 text-center border-2 border-danger bg-white shadow-[4px_4px_0_0_#ff2a2a]">
+                    <div class="mb-4 text-4xl">⚠️</div>
+                    <h3 class="font-black text-2xl uppercase tracking-tighter mb-2 text-danger">Failed to Load Jobs</h3>
+                    <p class="font-mono text-sm mb-2 max-w-md mx-auto text-ink">${res.error?.what || 'We could not retrieve your job postings at this time.'}</p>
+                    ${res.error?.why ? `<p class="font-mono text-xs mb-6 max-w-md mx-auto text-gray-600">${res.error.why}</p>` : ''}
+                    <button onclick="window.location.reload()" class="font-mono uppercase tracking-widest font-bold bg-ink text-white border-2 border-ink px-6 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-cyan hover:text-ink transition-colors duration-0">Refresh Page</button>
+                </div>`;
             return;
         }
 

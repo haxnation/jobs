@@ -59,8 +59,12 @@ export function attachJobsEvents() {
             }).join('');
         } else {
             container.innerHTML = `
-                <div class="col-span-full py-16 text-center border-2 border-ink bg-white shadow-[4px_4px_0_0_#0b0b0b]">
-                    <p class="font-mono text-sm font-bold uppercase tracking-widest text-white bg-danger inline-block px-4 py-2 border-2 border-ink">Failed to load jobs</p>
+                <div class="col-span-full py-16 text-center border-2 border-danger bg-white shadow-[4px_4px_0_0_#ff2a2a]">
+                    <div class="mb-4 text-4xl">⚠️</div>
+                    <h3 class="font-black text-2xl uppercase tracking-tighter mb-2 text-danger">Failed to Load Openings</h3>
+                    <p class="font-mono text-sm mb-2 max-w-md mx-auto text-ink">${res.error?.what || 'We could not retrieve the job board at this time.'}</p>
+                    ${res.error?.why ? `<p class="font-mono text-xs mb-6 max-w-md mx-auto text-gray-600">${res.error.why}</p>` : ''}
+                    <button onclick="window.location.reload()" class="font-mono uppercase tracking-widest font-bold bg-ink text-white border-2 border-ink px-6 py-2 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-cyan hover:text-ink transition-colors duration-0">Refresh Page</button>
                 </div>`;
         }
     }
