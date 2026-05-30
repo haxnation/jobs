@@ -11,7 +11,31 @@ let pageState = {
     hired: 1,
     rejected: 1
 };
+let pipelineCounts = { total: 0 };
 const statuses = ['submitted', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected'];
+
+function updatePipelineSummary() {
+    const summaryEl = document.getElementById('pipeline-summary');
+    if (!summaryEl) return;
+    
+    let total = 0;
+    const items = statuses.map(s => {
+        const c = pipelineCounts[s] || 0;
+        total += c;
+        return `<div class="flex flex-col items-center p-2 min-w-[80px]">
+            <span class="font-bold text-xl uppercase tracking-tighter">${c}</span>
+            <span class="font-mono text-[9px] uppercase tracking-widest text-gray-600">${s}</span>
+        </div>`;
+    });
+    
+    summaryEl.innerHTML = `
+        <div class="flex flex-col items-center p-2 min-w-[90px] border-r-2 border-ink mr-2 pr-4 bg-cyan">
+            <span class="font-black text-2xl uppercase tracking-tighter">${total}</span>
+            <span class="font-mono text-[9px] uppercase tracking-widest text-ink font-bold">Total Applicants</span>
+        </div>
+        ${items.join('')}
+    `;
+}
 
 export async function renderKanban(jobId) {
     // Reset state on load
@@ -19,7 +43,7 @@ export async function renderKanban(jobId) {
     for(const key in pageState) pageState[key] = 1;
 
     return `
-        <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-4 border-ink pb-4 gap-4">
+        <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-4 border-ink pb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-black text-ink uppercase tracking-tighter leading-none">
                     Applicant Pipeline <span class="text-gray-500 text-lg">Job #${jobId}</span>
@@ -29,7 +53,12 @@ export async function renderKanban(jobId) {
                 <input type="text" id="kanban-search" placeholder="Search by ID or Name..." class="w-full sm:w-64 border-2 border-ink p-2 font-mono text-sm focus:outline-none focus:border-cyan">
             </div>
         </div>
-        <div id="kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+
+        <div class="mb-6 border-2 border-ink shadow-[4px_4px_0_0_#0b0b0b] bg-white flex overflow-x-auto whitespace-nowrap" id="pipeline-summary">
+            <!-- Summary populated dynamically -->
+        </div>
+
+        <div id="kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 items-start">
             ${statuses.map(status => `
                 <div class="bg-canvas border-2 border-ink shadow-[4px_4px_0_0_#0b0b0b] flex flex-col" data-status="${status}">
                     <div class="bg-ink text-white p-3 font-bold uppercase tracking-widest border-b-2 border-ink flex justify-between items-center">
@@ -93,6 +122,11 @@ export function attachKanbanEvents(jobId) {
 
         const countEl = col.parentElement.querySelector('.kanban-count');
         if (countEl) countEl.textContent = pagination ? pagination.totalItems : apps.length;
+        
+        if (pagination) {
+            pipelineCounts[status] = pagination.totalItems;
+            updatePipelineSummary();
+        }
 
         if (!apps || apps.length === 0) {
             if (searchQuery) {
@@ -104,18 +138,41 @@ export function attachKanbanEvents(jobId) {
         }
 
         let html = apps.map(app => {
-            const nameStr = app.applicantName && app.applicantName !== 'Unknown' ? ` - ${app.applicantName}` : '';
+            const sum = app.candidateSummary || {};
+            const name = app.applicantName || 'Unknown Candidate';
+            const role = sum.role || 'No Role Specified';
+            const loc = sum.location || 'Remote/Unknown';
+            const exp = sum.experienceLevel || 'Entry Level';
+            const skills = (sum.topSkills || []).map(s => `<span class="bg-gray-200 text-ink px-1 border border-ink whitespace-nowrap">${s}</span>`).join(' ');
+            
+            const ind = sum.indicators || {};
+            let indHtml = '';
+            if (ind.hasResume) indHtml += `<span class="px-1 border border-ink bg-white font-bold" title="Resume Uploaded">📄</span> `;
+            if (ind.hasPortfolio) indHtml += `<span class="px-1 border border-ink bg-white font-bold" title="Portfolio">🔗</span> `;
+            if (ind.hasLinkedIn) indHtml += `<span class="px-1 border border-ink bg-white font-bold" title="LinkedIn">in</span> `;
+            if (ind.hasAssessment) indHtml += `<span class="px-1 border border-ink bg-white font-bold" title="Assessment">📝</span> `;
+            if (app.aiScore) indHtml += `<span class="px-1 border border-ink bg-cyan font-bold" title="AI Match Score">★ ${app.aiScore}</span> `;
+
             return `
-            <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card" data-app-id="${app.applicationId}" data-job-id="${jobId}">
-                <p class="font-mono text-xs font-bold uppercase">ID: ${app.applicantId?.substring(0, 8)}${nameStr}</p>
-                ${app.aiScore ? `<p class="font-mono text-[10px] text-gray-600">AI Score: <span class="font-bold text-ink">${app.aiScore}</span></p>` : ''}
-                <p class="font-mono text-[10px] text-gray-400">${new Date(app.createdAt).toLocaleDateString()}</p>
+            <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card group hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#0b0b0b] transition-all duration-75 cursor-pointer relative" data-app-id="${app.applicationId}" data-job-id="${jobId}">
+                <div>
+                    <h3 class="font-black text-lg uppercase tracking-tighter leading-tight">${name}</h3>
+                    <p class="font-mono text-[10px] uppercase text-gray-600 font-bold tracking-widest">${role}</p>
+                </div>
                 
-                <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300">
+                <div class="flex flex-col gap-0.5 mt-1">
+                    <p class="font-mono text-[10px] uppercase"><span class="font-bold">Loc:</span> ${loc}</p>
+                    <p class="font-mono text-[10px] uppercase"><span class="font-bold">Exp:</span> ${exp}</p>
+                    <p class="font-mono text-[10px] uppercase text-gray-500">Applied ${new Date(app.createdAt).toLocaleDateString()}</p>
+                </div>
+
+                ${skills ? `<div class="font-mono text-[8px] uppercase flex flex-wrap gap-1 mt-1">${skills}</div>` : ''}
+                ${indHtml ? `<div class="font-mono text-[10px] flex gap-1 mt-1">${indHtml}</div>` : ''}
+                
+                <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300" onclick="event.stopPropagation()">
                     <select class="status-shift font-mono text-[10px] uppercase border-2 border-ink p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}" data-current-status="${status}">
                         ${statuses.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
                     </select>
-                    <button class="view-app-btn font-mono text-[10px] uppercase bg-ink text-white border-2 border-ink px-2 py-1 hover:bg-cyan hover:text-ink transition-colors" data-app-id="${app.applicationId}">View</button>
                 </div>
             </div>
             `}).join('');
@@ -177,9 +234,12 @@ export function attachKanbanEvents(jobId) {
             });
         });
 
-        col.querySelectorAll('.view-app-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const appId = e.target.dataset.appId;
+        col.querySelectorAll('.kanban-card').forEach(card => {
+            card.addEventListener('click', async (e) => {
+                // Prevent opening modal if clicking the select dropdown (handled by stopPropagation in HTML, but just in case)
+                if (e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'option') return;
+                
+                const appId = card.dataset.appId;
                 const modal = document.getElementById('app-modal');
                 const content = document.getElementById('app-modal-content');
                 
