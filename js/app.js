@@ -111,6 +111,15 @@ async function router() {
             return;
         }
 
+        if (path === '/org-settings') {
+            if (!currentUser) { navigate('/'); return; }
+            showLoading(path);
+            const { renderOrgSettings, attachOrgSettingsEvents } = await import('./pages/org-settings.js');
+            app.innerHTML = await renderOrgSettings();
+            attachOrgSettingsEvents();
+            return;
+        }
+
 
         if (path.startsWith('/kanban/')) {
             if (!currentUser) { navigate('/'); return; }

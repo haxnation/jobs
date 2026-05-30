@@ -9,6 +9,7 @@ export async function renderDashboard() {
     const accountTypes = Array.isArray(currentUser?.accountType) ? currentUser.accountType : (currentUser?.accountType ? currentUser.accountType.split(',') : ['APPLIER']);
     const isManager = accountTypes.includes('MANAGER');
     const isApplier = accountTypes.includes('APPLIER');
+    const isOrg = accountTypes.includes('ORG') || currentUser?.orgId;
 
     return `
         <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b-4 border-ink pb-4">
@@ -60,6 +61,13 @@ export async function renderDashboard() {
                     <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">PRO</span>
                     <span class="text-[10px] tracking-widest opacity-90">Upgrades</span>
                 </a>
+                
+                ${isOrg ? `
+                <a href="/org-settings" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-[#ff00ff] text-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">TEAM</span>
+                    <span class="text-[10px] tracking-widest opacity-90">Org Quotas</span>
+                </a>
+                ` : ''}
             </div>
         </div>
 

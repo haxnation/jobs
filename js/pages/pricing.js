@@ -6,6 +6,9 @@ const PLANS = [
     { id: 'JOB_STANDARD', name: 'Standard Listing', price: '₹999', description: 'List your job on the public board for 30 days with standard visibility.', cta: 'List Job', needsJobId: true },
     { id: 'JOB_FEATURED', name: 'Featured Listing', price: '₹2,999', description: 'Featured placement on the board with highlighted card and top ranking.', cta: 'Feature Job', needsJobId: true },
     { id: 'EXT_CAP', name: 'Application Cap Extension', price: '₹500', description: 'Remove the application cap on a specific job posting.', cta: 'Extend Cap', needsJobId: true },
+    { id: 'ORG_STARTER', name: 'Org — Starter', price: '₹9,999/mo', description: '5 seats for your HR team. 50,000 total applications, unlimited job postings, and 2 active featured jobs.', cta: 'Subscribe to Starter' },
+    { id: 'ORG_GROWTH', name: 'Org — Growth', price: '₹24,999/mo', description: '10 seats for your HR team. 150,000 total applications, unlimited job postings, and 5 active featured jobs.', cta: 'Subscribe to Growth' },
+    { id: 'ORG_CUSTOM', name: 'Org — Custom', price: 'Custom', description: 'Need more seats or applications? Contact us for a custom tailored plan for your enterprise.', cta: 'Contact Sales' },
 ];
 
 export async function renderPricing() {
