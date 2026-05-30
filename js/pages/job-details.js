@@ -4,10 +4,10 @@ export async function renderJobDetails(jobId) {
     return `
         <div class="bg-white border-4 border-ink shadow-[12px_12px_0_0_#0b0b0b] p-0 max-w-4xl mx-auto mt-6 relative">
             <div class="bg-ink text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-ink">
-                <span class="uppercase tracking-widest">JOB DETAILS</span>
-                <a href="/jobs" class="nav-link text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">
-                    [X] Close
+                <a href="/jobs" id="job-back-btn" class="text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">
+                    ← Go Back
                 </a>
+                <span class="uppercase tracking-widest">JOB DETAILS</span>
             </div>
             <div class="p-6 sm:p-10" id="job-details-content">
                 <p class="font-mono animate-pulse">Loading...</p>
@@ -17,6 +17,16 @@ export async function renderJobDetails(jobId) {
 }
 
 export function attachJobDetailsEvents(jobId) {
+    document.getElementById('job-back-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.history.length > 2) {
+            window.history.back();
+        } else {
+            // Fallback if they opened directly
+            import('../app.js').then(({ navigate }) => navigate('/jobs'));
+        }
+    });
+
     async function loadJob() {
         const content = document.getElementById('job-details-content');
         const res = await apiCall(`/jobs/${jobId}`);

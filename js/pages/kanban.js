@@ -43,6 +43,9 @@ export async function renderKanban(jobId) {
     for(const key in pageState) pageState[key] = 1;
 
     return `
+        <div class="mb-4">
+            <a href="#" onclick="event.preventDefault(); window.history.length > 2 ? window.history.back() : window.location.href='/dashboard'" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_0_#0b0b0b] transition-all duration-75 inline-block">← Go Back</a>
+        </div>
         <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-4 border-ink pb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-black text-ink uppercase tracking-tighter leading-none">
