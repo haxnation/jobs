@@ -30,8 +30,10 @@ export function attachMyJobsEvents() {
         if (res.data.length === 0) {
             container.innerHTML = `
                 <div class="py-16 text-center border-2 border-ink bg-white shadow-[4px_4px_0_0_#0b0b0b]">
-                    <p class="font-mono text-sm font-bold uppercase tracking-widest mb-4">No Jobs Posted Yet</p>
-                    <a href="/jobs/create" class="nav-link inline-block font-mono text-xs font-bold uppercase bg-cyan text-ink border-2 border-ink px-6 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Create Your First Job</a>
+                    <div class="mb-4 text-4xl">📄</div>
+                    <h3 class="font-bold text-xl uppercase tracking-tighter mb-2">No Jobs Posted Yet</h3>
+                    <p class="font-mono text-sm mb-6 max-w-md mx-auto text-gray-600">Your jobs list is currently empty. The system is working correctly; you just haven't created any job openings yet.</p>
+                    <a href="/jobs/create" class="nav-link inline-block btn-primary">Create Your First Job</a>
                 </div>`;
             return;
         }

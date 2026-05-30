@@ -27,7 +27,10 @@ export function attachJobsEvents() {
             if (jobs.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full py-16 text-center border-2 border-ink bg-white shadow-[4px_4px_0_0_#0b0b0b]">
-                        <p class="font-mono text-sm font-bold uppercase tracking-widest text-ink">No Openings Available</p>
+                        <div class="mb-4 text-4xl">🔍</div>
+                        <h3 class="font-bold text-xl uppercase tracking-tighter mb-2">No Openings Available</h3>
+                        <p class="font-mono text-sm mb-6 max-w-md mx-auto text-gray-600">There are no job openings posted at the moment. Everything is working fine, please check back later!</p>
+                        <a href="/dashboard" class="nav-link inline-block btn-primary">Go to Dashboard</a>
                     </div>`;
                 return;
             }

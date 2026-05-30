@@ -1,5 +1,8 @@
 import { apiCall } from '../api.js';
 import { navigate } from '../app.js';
+import { setupFormValidation } from '../components/forms.js';
+import { renderButtonSpinner } from '../components/skeleton.js';
+import { showToast, showModal } from '../components/notifications.js';
 
 export async function renderJobCreate() {
     return `
@@ -10,7 +13,7 @@ export async function renderJobCreate() {
                     <a href="/dashboard" class="nav-link text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">[X] Cancel</a>
                 </div>
 
-                <div class="p-6 sm:p-10">
+                <form id="job-create-form" class="p-6 sm:p-10" novalidate>
                     <div class="mb-6">
                         <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">
                             Job Title *
@@ -20,6 +23,7 @@ export async function renderJobCreate() {
                             type="text"
                             placeholder="e.g. Senior Backend Engineer"
                             class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
+                            required
                         >
                     </div>
 
@@ -32,6 +36,8 @@ export async function renderJobCreate() {
                             rows="6"
                             placeholder="Describe the role, responsibilities, and requirements..."
                             class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan resize-y"
+                            maxlength="2000"
+                            required
                         ></textarea>
                     </div>
 
@@ -75,6 +81,7 @@ export async function renderJobCreate() {
                                 type="text"
                                 placeholder="e.g. Mumbai, India"
                                 class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan"
+                                required
                             >
                         </div>
 
@@ -153,17 +160,16 @@ export async function renderJobCreate() {
 
                     <button
                         id="create-job-btn"
-                        class="btn-primary w-full"
+                        type="submit"
+                        class="btn-primary w-full submit-btn"
                     >
                         Create Job Opening
                     </button>
 
-                    <p id="create-job-status" class="mt-3 font-mono text-xs hidden"></p>
-
                     <p class="mt-4 font-mono text-[10px] text-gray-500 uppercase">
                         Note: Jobs are created as private. Use the Pricing page to list them on the public board.
                     </p>
-                </div>
+                </form>
             </div>
         </div>
     `;
@@ -309,8 +315,8 @@ export function attachJobCreateEvents() {
     // Reset questions state each time the page mounts
     questions = [];
 
+    const form = document.getElementById('job-create-form');
     const btn = document.getElementById('create-job-btn');
-    const status = document.getElementById('create-job-status');
     const addBtn = document.getElementById('add-question-btn');
 
     if (addBtn) {
@@ -330,29 +336,8 @@ export function attachJobCreateEvents() {
         });
     }
 
-    if (btn) {
-        btn.addEventListener('click', async () => {
-            const title =
-                document.getElementById('job-title')?.value?.trim();
-
-            const description =
-                document.getElementById('job-description')?.value?.trim();
-
-            const location =
-                document.getElementById('job-location')?.value?.trim();
-
-            if (!title || !description || !location) {
-                status.textContent =
-                    'Title, description and location are required.';
-
-                status.className =
-                    'mt-3 font-mono text-xs font-bold text-red-600';
-
-                status.classList.remove('hidden');
-
-                return;
-            }
-
+    if (form) {
+        setupFormValidation(form, async () => {
             // Sync and validate custom questions before submitting
             syncQuestionsFromDOM();
 
@@ -360,87 +345,51 @@ export function attachJobCreateEvents() {
                 const q = questions[i];
 
                 if (!q.question) {
-                    status.textContent =
-                        `Question ${i + 1} is missing its text.`;
-
-                    status.className =
-                        'mt-3 font-mono text-xs font-bold text-red-600';
-
-                    status.classList.remove('hidden');
-
+                    showToast(`Question ${i + 1} is missing text.`, 'error');
                     return;
                 }
 
-                if (
-                    q.type === 'multiple_choice' &&
-                    (!q.options || q.options.length < 2)
-                ) {
-                    status.textContent =
-                        `Question ${i + 1} (multiple choice) needs at least 2 options.`;
-
-                    status.className =
-                        'mt-3 font-mono text-xs font-bold text-red-600';
-
-                    status.classList.remove('hidden');
-
+                if (q.type === 'multiple_choice' && (!q.options || q.options.length < 2)) {
+                    showToast(`Question ${i + 1} needs at least 2 options.`, 'error');
                     return;
                 }
             }
 
             const payload = {
-                title,
-                description,
-                location,
-                locationType:
-                    document.getElementById('job-location-type')?.value || 'remote',
-
-                clientCompany:
-                    document.getElementById('job-company')?.value?.trim() || null,
-
-                managerRole:
-                    document.getElementById('job-manager-role')?.value || 'hiring',
-
-                experienceMin:
-                    parseInt(document.getElementById('job-exp-min')?.value) || 0,
-
-                skills:
-                    (document.getElementById('job-skills')?.value || '')
+                title: document.getElementById('job-title')?.value?.trim(),
+                description: document.getElementById('job-description')?.value?.trim(),
+                location: document.getElementById('job-location')?.value?.trim(),
+                locationType: document.getElementById('job-location-type')?.value || 'remote',
+                clientCompany: document.getElementById('job-company')?.value?.trim() || null,
+                managerRole: document.getElementById('job-manager-role')?.value || 'hiring',
+                experienceMin: parseInt(document.getElementById('job-exp-min')?.value) || 0,
+                skills: (document.getElementById('job-skills')?.value || '')
                         .split(',')
                         .map(s => s.trim())
                         .filter(Boolean),
-
-                // Only include customQuestions when the user has added at least one
-                ...(questions.length > 0
-                    ? { customQuestions: questions }
-                    : {}),
+                ...(questions.length > 0 ? { customQuestions: questions } : {}),
             };
 
+            const originalBtnContent = btn.innerHTML;
             btn.disabled = true;
-            btn.innerText = 'CREATING...';
+            btn.innerHTML = renderButtonSpinner('CREATING');
 
             const res = await apiCall('/jobs', 'POST', payload);
 
             if (res.success) {
-                status.textContent =
-                    '✓ Job created! Redirecting...';
-
-                status.className =
-                    'mt-3 font-mono text-xs font-bold text-green-700';
-
-                status.classList.remove('hidden');
-
+                showToast('Job created successfully!');
                 setTimeout(() => navigate('/my-jobs'), 1000);
             } else {
-                status.textContent =
-                    res.error || 'Failed to create job.';
-
-                status.className =
-                    'mt-3 font-mono text-xs font-bold text-red-600';
-
-                status.classList.remove('hidden');
-
+                showModal({
+                    title: 'Creation Failed',
+                    what: res.error?.what || 'Failed to create job opening.',
+                    why: res.error?.why,
+                    nextStepLabel: res.error?.nextStepLabel || 'Try Again',
+                    nextStepAction: res.error?.nextStepAction || null,
+                    isSystemFault: res.error?.isSystemFault || false
+                });
                 btn.disabled = false;
-                btn.innerText = 'Create Job Opening';
+                btn.innerHTML = originalBtnContent;
             }
         });
     }

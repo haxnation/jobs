@@ -1,5 +1,7 @@
 import { currentUser } from '../app.js';
 import { apiCall } from '../api.js';
+import { renderButtonSpinner } from '../components/skeleton.js';
+import { showToast, showModal } from '../components/notifications.js';
 
 export async function renderDashboard() {
     const userName = currentUser?.name || 'User';
@@ -9,54 +11,117 @@ export async function renderDashboard() {
     const isApplier = accountTypes.includes('APPLIER');
 
     return `
-        <div class="mb-10">
-            <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-ink inline-block px-2 border-2 border-ink">Dashboard</p>
-            <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter leading-none border-b-4 border-ink pb-4">
-                Welcome, ${userName}
-            </h1>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b]">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Your Profile</h3>
-                <p class="font-mono text-sm mb-2"><strong>Email:</strong> ${userEmail}</p>
-                <p class="font-mono text-sm mb-4"><strong>Roles:</strong> ${accountTypes.join(', ')}</p>
-                <a href="/cv-builder" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0 inline-block">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b-4 border-ink pb-4">
+            <div>
+                <p class="font-mono text-xs font-bold uppercase tracking-widest text-white mb-2 bg-ink inline-block px-2 border-2 border-ink">Dashboard</p>
+                <h1 class="text-4xl sm:text-5xl font-black text-ink uppercase tracking-tighter leading-none">
+                    Welcome, ${userName}
+                </h1>
+            </div>
+            <!-- 1. Compact Profile Summary -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border-2 border-ink p-3 shadow-[4px_4px_0_0_#0b0b0b]">
+                <div class="font-mono text-xs leading-relaxed hidden sm:block">
+                    <strong>Email:</strong> ${userEmail}<br>
+                    <strong>Roles:</strong> ${accountTypes.join(', ')}
+                </div>
+                <a href="/cv-builder" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0 whitespace-nowrap">
                     Manage CV →
                 </a>
             </div>
-            
-            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b]">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Quick Actions</h3>
+        </div>
+
+        <!-- 2 & 3. Quick Actions as Primary Focal Area -->
+        <div class="mb-10">
+            <h3 class="font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-3 h-3 bg-cyan border-2 border-ink inline-block"></span> Quick Actions</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                ${isApplier ? `
+                    <a href="/jobs" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <div class="text-2xl mb-2">🔍</div>
+                        Find Jobs
+                    </a>
+                ` : ''}
                 ${isManager ? `
-                    <a href="/jobs/create" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0">Post a Job</a>
-                    <a href="/my-jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Manage My Jobs</a>
+                    <a href="/jobs/create" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <div class="text-2xl mb-2">➕</div>
+                        Post a Job
+                    </a>
                 ` : ''}
                 ${isApplier ? `
-                    <a href="/jobs" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-cyan text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:border-white transition-colors duration-0">Find Jobs</a>
-                    <a href="/my-applications" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">My Applications</a>
+                    <a href="/my-applications" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <div class="text-2xl mb-2">📁</div>
+                        My Applications
+                    </a>
                 ` : ''}
-                <a href="/pricing" class="nav-link block text-center mb-2 font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Pricing & Upgrades</a>
-                <a href="/analytics" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink px-4 py-2 shadow-[2px_2px_0_0_#0b0b0b] hover:bg-ink hover:text-white transition-colors duration-0">Analytics</a>
+                ${isManager ? `
+                    <a href="/my-jobs" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                        <div class="text-2xl mb-2">📋</div>
+                        Manage My Jobs
+                    </a>
+                ` : ''}
+                <a href="/analytics" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <div class="text-2xl mb-2">📈</div>
+                    Analytics
+                </a>
+                <a href="/pricing" class="nav-link block text-center font-mono text-xs font-bold uppercase tracking-widest bg-white text-ink border-2 border-ink p-4 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
+                    <div class="text-2xl mb-2">💎</div>
+                    Pricing & Upgrades
+                </a>
             </div>
+        </div>
+
+        <!-- 5. Future Dashboard Content Placeholders -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            ${isApplier ? `
+            <div class="bg-canvas border-2 border-dashed border-ink p-6 opacity-60">
+                <h3 class="font-bold uppercase tracking-widest mb-2 flex items-center justify-between">
+                    Recommended Jobs
+                    <span class="font-mono text-[10px] bg-ink text-white px-2 py-0.5">Coming Soon</span>
+                </h3>
+                <p class="font-mono text-xs text-gray-600">AI-powered job recommendations based on your profile will appear here.</p>
+            </div>
+            ` : ''}
             
-            <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] md:col-span-2 border-dashed">
-                <h3 class="font-bold uppercase tracking-widest border-b-2 border-ink pb-2 mb-4">Account Roles</h3>
-                <p class="font-mono text-xs mb-4">Manage your account roles to switch between finding jobs and posting jobs:</p>
-                <div class="flex flex-wrap gap-4" id="role-toggles">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${accountTypes.includes('APPLIER') ? 'checked' : ''}>
-                        <span class="font-mono text-sm font-bold uppercase">Applier</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${accountTypes.includes('MANAGER') ? 'checked' : ''}>
-                        <span class="font-mono text-sm font-bold uppercase">Manager</span>
-                    </label>
+            ${isManager ? `
+            <div class="bg-canvas border-2 border-dashed border-ink p-6 opacity-60">
+                <h3 class="font-bold uppercase tracking-widest mb-2 flex items-center justify-between">
+                    Job Statistics
+                    <span class="font-mono text-[10px] bg-ink text-white px-2 py-0.5">Coming Soon</span>
+                </h3>
+                <p class="font-mono text-xs text-gray-600">Views, conversion rates, and pipeline health for your active postings.</p>
+            </div>
+            ` : ''}
+
+            <div class="bg-canvas border-2 border-dashed border-ink p-6 opacity-60">
+                <h3 class="font-bold uppercase tracking-widest mb-2 flex items-center justify-between">
+                    Recent Activity
+                    <span class="font-mono text-[10px] bg-ink text-white px-2 py-0.5">Coming Soon</span>
+                </h3>
+                <p class="font-mono text-xs text-gray-600">An activity log of notifications, application status changes, and system alerts.</p>
+            </div>
+        </div>
+
+        <!-- 4. Account Roles (Moved below primary content) -->
+        <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b]">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 class="font-bold uppercase tracking-widest mb-1">Account Roles</h3>
+                    <p class="font-mono text-xs text-gray-600">Manage your active roles to switch contexts.</p>
                 </div>
-                <button id="save-roles-btn" class="mt-4 font-mono text-xs font-bold uppercase tracking-widest bg-ink text-white border-2 border-ink px-4 py-2 hover:bg-white hover:text-ink transition-colors duration-0">
-                    Save Roles
-                </button>
-                <p id="role-save-status" class="mt-2 font-mono text-xs hidden"></p>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="flex gap-4" id="role-toggles">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="APPLIER" ${accountTypes.includes('APPLIER') ? 'checked' : ''}>
+                            <span class="font-mono text-sm font-bold uppercase">Applier</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 border-2 border-ink checked:bg-ink focus:ring-0 cursor-pointer role-checkbox" value="MANAGER" ${accountTypes.includes('MANAGER') ? 'checked' : ''}>
+                            <span class="font-mono text-sm font-bold uppercase">Manager</span>
+                        </label>
+                    </div>
+                    <button id="save-roles-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-ink text-white border-2 border-ink px-4 py-2 hover:bg-white hover:text-ink transition-colors duration-0 whitespace-nowrap">
+                        Save Roles
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -65,7 +130,6 @@ export async function renderDashboard() {
 export function attachDashboardEvents() {
     // --- Save Roles ---
     const saveRolesBtn = document.getElementById('save-roles-btn');
-    const roleStatus = document.getElementById('role-save-status');
 
     if (saveRolesBtn) {
         saveRolesBtn.addEventListener('click', async () => {
@@ -73,25 +137,29 @@ export function attachDashboardEvents() {
             const newRoles = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value.trim().toUpperCase());
             
             if (newRoles.length === 0) {
-                alert("Please select at least one role.");
+                showToast("Please select at least one role.", "error");
                 return;
             }
             
-            saveRolesBtn.innerText = "SAVING...";
+            const originalText = saveRolesBtn.innerHTML;
+            saveRolesBtn.innerHTML = renderButtonSpinner('SAVING');
             saveRolesBtn.disabled = true;
             
             const res = await apiCall('/users/me', 'PUT', { accountType: newRoles });
             
             if (res.success) {
-                roleStatus.textContent = '✓ Roles updated successfully!';
-                roleStatus.className = 'mt-2 font-mono text-xs font-bold text-green-700';
-                roleStatus.classList.remove('hidden');
+                showToast('Roles updated successfully!');
                 setTimeout(() => window.location.reload(), 800);
             } else {
-                roleStatus.textContent = res.error || 'Failed to update roles.';
-                roleStatus.className = 'mt-2 font-mono text-xs font-bold text-red-600';
-                roleStatus.classList.remove('hidden');
-                saveRolesBtn.innerText = "Save Roles";
+                showModal({
+                    title: 'Update Failed',
+                    what: res.error?.what || 'Failed to update roles.',
+                    why: res.error?.why,
+                    nextStepLabel: res.error?.nextStepLabel || 'Try Again',
+                    nextStepAction: res.error?.nextStepAction || null,
+                    isSystemFault: res.error?.isSystemFault || false
+                });
+                saveRolesBtn.innerHTML = originalText;
                 saveRolesBtn.disabled = false;
             }
         });

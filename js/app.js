@@ -2,11 +2,10 @@ import { apiCall, API_BASE } from './api.js';
 
 const app = document.getElementById('app');
 
-function showLoading() {
-    app.innerHTML = `
-        <div class="flex items-center justify-center min-h-[50vh]">
-            <div class="w-12 h-12 bg-ink border-4 border-cyan shadow-[4px_4px_0_0_#0b0b0b] animate-[spin_1s_steps(4)_infinite]"></div>
-        </div>`;
+import { renderSkeleton } from './components/skeleton.js';
+
+function showLoading(path = '') {
+    app.innerHTML = renderSkeleton(path);
 }
 
 export let currentUser = null;
@@ -33,14 +32,14 @@ async function router() {
         await checkAuth();
 
         if (path === '/') {
-            showLoading();
+            showLoading(path);
             const { renderHome } = await import('./pages/home.js');
             app.innerHTML = await renderHome();
             return;
         }
 
         if (path === '/jobs') {
-            showLoading();
+            showLoading(path);
             const { renderJobs, attachJobsEvents } = await import('./pages/jobs.js');
             app.innerHTML = await renderJobs();
             attachJobsEvents();
@@ -50,7 +49,7 @@ async function router() {
         // /jobs/create must be checked BEFORE /jobs/:id
         if (path === '/jobs/create') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderJobCreate, attachJobCreateEvents } = await import('./pages/job-create.js');
             app.innerHTML = await renderJobCreate();
             attachJobCreateEvents();
@@ -58,7 +57,7 @@ async function router() {
         }
 
         if (path.startsWith('/jobs/')) {
-            showLoading();
+            showLoading(path);
             const jobId = path.split('/jobs/')[1];
             const { renderJobDetails, attachJobDetailsEvents } = await import('./pages/job-details.js');
             app.innerHTML = await renderJobDetails(jobId);
@@ -69,7 +68,7 @@ async function router() {
         if (path === '/dashboard') {
             if (!currentUser) { navigate('/'); return; }
             if (currentUser.onboarded === false) { navigate('/onboarding'); return; }
-            showLoading();
+            showLoading(path);
             const { renderDashboard, attachDashboardEvents } = await import('./pages/dashboard.js');
             app.innerHTML = await renderDashboard();
             attachDashboardEvents();
@@ -78,7 +77,7 @@ async function router() {
 
         if (path === '/onboarding') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderOnboarding, attachOnboardingEvents } = await import('./pages/onboarding.js');
             app.innerHTML = await renderOnboarding();
             attachOnboardingEvents();
@@ -87,7 +86,7 @@ async function router() {
 
         if (path === '/my-jobs') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderMyJobs, attachMyJobsEvents } = await import('./pages/my-jobs.js');
             app.innerHTML = await renderMyJobs();
             attachMyJobsEvents();
@@ -96,7 +95,7 @@ async function router() {
 
         if (path === '/my-applications') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderMyApplications, attachMyApplicationsEvents } = await import('./pages/my-applications.js');
             app.innerHTML = await renderMyApplications();
             attachMyApplicationsEvents();
@@ -105,7 +104,7 @@ async function router() {
 
         if (path === '/pricing') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderPricing, attachPricingEvents } = await import('./pages/pricing.js');
             app.innerHTML = await renderPricing();
             attachPricingEvents();
@@ -114,7 +113,7 @@ async function router() {
 
         if (path === '/analytics') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderAnalytics, attachAnalyticsEvents } = await import('./pages/analytics.js');
             app.innerHTML = await renderAnalytics();
             attachAnalyticsEvents();
@@ -123,7 +122,7 @@ async function router() {
 
         if (path.startsWith('/kanban/')) {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const jobId = path.split('/kanban/')[1];
             const { renderKanban, attachKanbanEvents } = await import('./pages/kanban.js');
             app.innerHTML = await renderKanban(jobId);
@@ -133,7 +132,7 @@ async function router() {
 
         if (path === '/cv-builder') {
             if (!currentUser) { navigate('/'); return; }
-            showLoading();
+            showLoading(path);
             const { renderCvBuilder, attachCvBuilderEvents } = await import('./pages/cv-builder.js');
             app.innerHTML = await renderCvBuilder();
             attachCvBuilderEvents();
@@ -142,8 +141,13 @@ async function router() {
 
         app.innerHTML = `
             <div class="text-center mt-20 border-4 border-ink bg-white p-8 shadow-[8px_8px_0_0_#0b0b0b] max-w-md mx-auto">
-                <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-ink pb-2 mb-6">404 - NOT FOUND<span class="inline-block w-3 h-[1em] bg-danger animate-pulse align-middle ml-1"></span></h2>
-                <a href="/" class="nav-link block btn-primary">RETURN TO HOME</a>
+                <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-ink pb-2 mb-4 text-danger">⚠ 404 - NOT FOUND</h2>
+                <div class="font-mono text-sm space-y-3 mb-6 text-left">
+                    <p><strong>What happened:</strong> The page you are looking for does not exist.</p>
+                    <p><strong>Why:</strong> You may have followed a broken link or entered a URL incorrectly (Client Error).</p>
+                    <p><strong>Next Step:</strong> Return to the homepage to continue browsing.</p>
+                </div>
+                <a href="/" class="nav-link block btn-primary w-full">RETURN TO HOME</a>
             </div>`;
 
     } catch (error) {
