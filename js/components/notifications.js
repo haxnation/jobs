@@ -67,9 +67,8 @@ export function showModal({ title, what, why, nextStepLabel, nextStepAction, typ
             ${isSuccess ? '✓' : '⚠'} ${title}
         </h2>
         
-        <div class="space-y-4 font-mono text-sm mb-6">
-            ${what ? `<p><strong>What happened:</strong> ${what}</p>` : ''}
-            ${why ? `<p><strong>Why:</strong> ${why}</p>` : ''}
+        <div class="font-mono text-sm mb-6 leading-relaxed">
+            ${what ? `${what}` : ''}${why ? ` ${why}` : ''}
         </div>
 
         <div class="flex flex-wrap gap-3">

@@ -75,15 +75,7 @@ export async function renderDashboard() {
             </div>
             ` : ''}
             
-            ${isManager ? `
-            <div class="bg-canvas border-2 border-dashed border-ink p-6 opacity-60">
-                <h3 class="font-bold uppercase tracking-widest mb-2 flex items-center justify-between">
-                    Job Statistics
-                    <span class="font-mono text-[10px] bg-ink text-white px-2 py-0.5">Coming Soon</span>
-                </h3>
-                <p class="font-mono text-xs text-gray-600">Views, conversion rates, and pipeline health for your active postings.</p>
-            </div>
-            ` : ''}
+
 
             <div class="bg-canvas border-2 border-dashed border-ink p-6 opacity-60">
                 <h3 class="font-bold uppercase tracking-widest mb-2 flex items-center justify-between">

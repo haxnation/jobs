@@ -134,10 +134,8 @@ async function router() {
         app.innerHTML = `
             <div class="text-center mt-20 border-4 border-ink bg-white p-8 shadow-[8px_8px_0_0_#0b0b0b] max-w-md mx-auto">
                 <h2 class="text-2xl font-bold uppercase tracking-tight border-b-2 border-ink pb-2 mb-4 text-danger">⚠ 404 - NOT FOUND</h2>
-                <div class="font-mono text-sm space-y-3 mb-6 text-left">
-                    <p><strong>What happened:</strong> The page you are looking for does not exist.</p>
-                    <p><strong>Why:</strong> You may have followed a broken link or entered a URL incorrectly (Client Error).</p>
-                    <p><strong>Next Step:</strong> Return to the homepage to continue browsing.</p>
+                <div class="font-mono text-sm mb-6 text-left leading-relaxed">
+                    <p>The page you are looking for does not exist. You may have followed a broken link or entered a URL incorrectly (Client Error). Please return to the homepage to continue browsing.</p>
                 </div>
                 <a href="/" class="nav-link block btn-primary w-full">RETURN TO HOME</a>
             </div>`;
