@@ -168,6 +168,35 @@ document.addEventListener('click', e => {
 });
 
 document.getElementById('login-btn').addEventListener('click', () => {
+    // Show progressive auth loader
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="flex items-center justify-center min-h-[50vh]">
+            <div class="flex flex-col items-center justify-center animate-pulse">
+                <span class="flex items-center bg-ink border-4 border-ink px-6 py-3 shadow-[8px_8px_0_0_#0b0b0b]">
+                    <img src="https://haxnation.org/images/logo_wt.png" alt="HAXNATION" class="h-10 w-auto block object-contain">
+                </span>
+                <p id="auth-loading-text" class="font-mono text-xs font-bold uppercase tracking-widest mt-8 bg-cyan px-2 border-2 border-ink shadow-[2px_2px_0_0_#0b0b0b]">Starting...</p>
+            </div>
+        </div>
+    `;
+
+    const texts = [
+        "Starting...",
+        "Loading account...",
+        "Connecting to secure server...",
+        "Almost there...",
+        "Just a moment more..."
+    ];
+    let idx = 0;
+    setInterval(() => {
+        const textEl = document.getElementById('auth-loading-text');
+        if (textEl) {
+            idx = (idx + 1) % texts.length;
+            textEl.innerText = texts[idx];
+        }
+    }, 2000);
+
     const currentPath = window.location.pathname + window.location.search;
     window.location.href = `${API_BASE}/auth/login?returnTo=${encodeURIComponent(currentPath)}`; 
 });

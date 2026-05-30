@@ -153,10 +153,28 @@ export function attachKanbanEvents(jobId) {
             if (ind.hasAssessment) indHtml += `<span class="px-1 border border-ink bg-white font-bold" title="Assessment">📝</span> `;
             if (app.aiScore) indHtml += `<span class="px-1 border border-ink bg-cyan font-bold" title="AI Match Score">★ ${app.aiScore}</span> `;
 
+            const currentIdx = statuses.indexOf(status);
+            
+            let quickActionsHtml = '';
+            if (status !== 'rejected' && status !== 'hired') {
+                const advanceStatus = currentIdx < statuses.length - 2 ? statuses[currentIdx + 1] : null;
+                quickActionsHtml = `
+                    <div class="flex gap-1 mt-2 pt-2 border-t border-dashed border-gray-300" onclick="event.stopPropagation()">
+                        ${advanceStatus ? `<button class="quick-action-btn font-mono text-[9px] uppercase bg-cyan text-ink border border-ink px-2 py-1 font-bold flex-1 hover:bg-ink hover:text-white transition-colors" data-app-id="${app.applicationId}" data-current-status="${status}" data-new-status="${advanceStatus}">Advance to ${advanceStatus}</button>` : ''}
+                        <button class="quick-action-btn font-mono text-[9px] uppercase bg-white text-danger border border-danger px-2 py-1 font-bold hover:bg-danger hover:text-white transition-colors" data-app-id="${app.applicationId}" data-current-status="${status}" data-new-status="rejected">Reject</button>
+                    </div>
+                `;
+            }
+
             return `
             <div class="bg-white border-2 border-ink p-3 shadow-[2px_2px_0_0_#0b0b0b] flex flex-col gap-2 kanban-card group hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0_0_#0b0b0b] transition-all duration-75 cursor-pointer relative" data-app-id="${app.applicationId}" data-job-id="${jobId}">
+                <!-- Explicit View Profile Indicator on Hover -->
+                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="font-mono text-[9px] uppercase bg-ink text-white px-2 py-1 font-bold pointer-events-none">View Profile ↗</span>
+                </div>
+
                 <div>
-                    <h3 class="font-black text-lg uppercase tracking-tighter leading-tight">${name}</h3>
+                    <h3 class="font-black text-lg uppercase tracking-tighter leading-tight pr-20">${name}</h3>
                     <p class="font-mono text-[10px] uppercase text-gray-600 font-bold tracking-widest">${role}</p>
                 </div>
                 
@@ -169,8 +187,11 @@ export function attachKanbanEvents(jobId) {
                 ${skills ? `<div class="font-mono text-[8px] uppercase flex flex-wrap gap-1 mt-1">${skills}</div>` : ''}
                 ${indHtml ? `<div class="font-mono text-[10px] flex gap-1 mt-1">${indHtml}</div>` : ''}
                 
-                <div class="flex gap-2 mt-2 pt-2 border-t border-dashed border-gray-300" onclick="event.stopPropagation()">
-                    <select class="status-shift font-mono text-[10px] uppercase border-2 border-ink p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}" data-current-status="${status}">
+                ${quickActionsHtml}
+                
+                <div class="flex gap-2 ${quickActionsHtml ? 'mt-1' : 'mt-2 pt-2 border-t border-dashed border-gray-300'}" onclick="event.stopPropagation()">
+                    <select class="status-shift font-mono text-[10px] uppercase border border-ink bg-canvas p-1 flex-1 cursor-pointer focus:outline-none" data-app-id="${app.applicationId}" data-current-status="${status}">
+                        <option value="" disabled>Move to...</option>
                         ${statuses.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
                     </select>
                 </div>
@@ -192,34 +213,84 @@ export function attachKanbanEvents(jobId) {
     }
 
     function attachColumnEvents(col, jobId) {
+        // Shared Status Update Logic with Optimistic UI
+        const handleStatusChange = async (appId, currentStatus, newStatus, cardEl, selectEl = null, btnEl = null) => {
+            if (currentStatus === newStatus) return;
+            
+            const sourceCol = document.querySelector(`.kanban-column[data-status="${currentStatus}"]`);
+            const targetCol = document.querySelector(`.kanban-column[data-status="${newStatus}"]`);
+            
+            // Disable inputs during network request
+            if (selectEl) selectEl.disabled = true;
+            if (btnEl) btnEl.disabled = true;
+
+            // 1. Optimistic UI Update: Move Card & Update Counts
+            if (cardEl && targetCol && sourceCol) {
+                targetCol.appendChild(cardEl);
+                pipelineCounts[currentStatus]--;
+                pipelineCounts[newStatus]++;
+                updatePipelineSummary();
+                
+                const srcCount = sourceCol.parentElement.querySelector('.kanban-count');
+                const tgtCount = targetCol.parentElement.querySelector('.kanban-count');
+                if (srcCount) srcCount.textContent = parseInt(srcCount.textContent) - 1;
+                if (tgtCount) tgtCount.textContent = parseInt(tgtCount.textContent) + 1;
+            }
+
+            // 2. Perform Network Request
+            const res = await apiCall(`/applications/${appId}/status`, 'POST', { jobId, status: newStatus });
+            
+            // 3. Rollback on Failure
+            if (!res.success) {
+                if (cardEl && targetCol && sourceCol) {
+                    sourceCol.appendChild(cardEl);
+                    pipelineCounts[currentStatus]++;
+                    pipelineCounts[newStatus]--;
+                    updatePipelineSummary();
+                    
+                    const srcCount = sourceCol.parentElement.querySelector('.kanban-count');
+                    const tgtCount = targetCol.parentElement.querySelector('.kanban-count');
+                    if (srcCount) srcCount.textContent = parseInt(srcCount.textContent) + 1;
+                    if (tgtCount) tgtCount.textContent = parseInt(tgtCount.textContent) - 1;
+                }
+                showModal({
+                    title: 'Update Failed',
+                    what: res.error?.what || 'Failed to update candidate status.',
+                    why: res.error?.why || 'An unknown error occurred.',
+                    nextStepLabel: res.error?.nextStepLabel || 'Dismiss',
+                    nextStepAction: res.error?.nextStepAction,
+                    isSystemFault: res.error?.isSystemFault
+                });
+                if (selectEl) {
+                    selectEl.value = currentStatus;
+                    selectEl.disabled = false;
+                }
+                if (btnEl) btnEl.disabled = false;
+            } else {
+                // Trigger a background refresh to correct pagination without blocking the user
+                loadColumn(jobId, currentStatus);
+                loadColumn(jobId, newStatus);
+            }
+        };
+
         col.querySelectorAll('.status-shift').forEach(select => {
-            select.addEventListener('change', async (e) => {
+            select.addEventListener('change', (e) => {
                 const appId = e.target.dataset.appId;
                 const newStatus = e.target.value;
                 const currentStatus = e.target.dataset.currentStatus;
-                
-                e.target.disabled = true;
-                const res = await apiCall(`/applications/${appId}/status`, 'POST', {
-                    jobId,
-                    status: newStatus
-                });
-                
-                if (res.success) {
-                    // Reload both the old column and the new column to reflect state accurately
-                    loadColumn(jobId, currentStatus);
-                    loadColumn(jobId, newStatus);
-                } else {
-                    showModal({
-                        title: 'Update Failed',
-                        what: res.error?.what || 'Failed to update candidate status.',
-                        why: res.error?.why || 'An unknown error occurred.',
-                        nextStepLabel: res.error?.nextStepLabel || 'Dismiss',
-                        nextStepAction: res.error?.nextStepAction,
-                        isSystemFault: res.error?.isSystemFault
-                    });
-                    e.target.value = currentStatus;
-                    e.target.disabled = false;
-                }
+                const cardEl = e.target.closest('.kanban-card');
+                handleStatusChange(appId, currentStatus, newStatus, cardEl, e.target);
+            });
+        });
+
+        col.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const appId = e.currentTarget.dataset.appId;
+                const newStatus = e.currentTarget.dataset.newStatus;
+                const currentStatus = e.currentTarget.dataset.currentStatus;
+                const cardEl = e.currentTarget.closest('.kanban-card');
+                handleStatusChange(appId, currentStatus, newStatus, cardEl, null, e.currentTarget);
             });
         });
 
@@ -236,8 +307,8 @@ export function attachKanbanEvents(jobId) {
 
         col.querySelectorAll('.kanban-card').forEach(card => {
             card.addEventListener('click', async (e) => {
-                // Prevent opening modal if clicking the select dropdown (handled by stopPropagation in HTML, but just in case)
-                if (e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'option') return;
+                // Prevent opening modal if clicking the select dropdown or buttons
+                if (e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'option' || e.target.tagName.toLowerCase() === 'button') return;
                 
                 const appId = card.dataset.appId;
                 const modal = document.getElementById('app-modal');
