@@ -111,14 +111,6 @@ async function router() {
             return;
         }
 
-        if (path === '/analytics') {
-            if (!currentUser) { navigate('/'); return; }
-            showLoading(path);
-            const { renderAnalytics, attachAnalyticsEvents } = await import('./pages/analytics.js');
-            app.innerHTML = await renderAnalytics();
-            attachAnalyticsEvents();
-            return;
-        }
 
         if (path.startsWith('/kanban/')) {
             if (!currentUser) { navigate('/'); return; }

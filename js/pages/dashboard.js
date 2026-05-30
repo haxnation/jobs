@@ -55,10 +55,7 @@ export async function renderDashboard() {
                         <span class="text-[10px] tracking-widest opacity-90">Manage Postings</span>
                     </a>
                 ` : ''}
-                <a href="/analytics" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
-                    <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">STATS</span>
-                    <span class="text-[10px] tracking-widest opacity-90">Analytics</span>
-                </a>
+
                 <a href="/pricing" class="nav-link flex flex-col justify-center items-center text-center font-mono font-bold uppercase bg-white text-ink border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] hover:bg-ink hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">
                     <span class="text-2xl lg:text-3xl font-black tracking-tighter mb-1">PRO</span>
                     <span class="text-[10px] tracking-widest opacity-90">Upgrades</span>
