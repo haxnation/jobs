@@ -1,4 +1,5 @@
 import { apiCall } from '../api.js';
+import { showToast } from '../components/notifications.js';
 
 export async function renderMyJobs() {
     return `
@@ -38,22 +39,43 @@ export function attachMyJobsEvents() {
             return;
         }
 
+        const origin = window.location.origin;
+
         container.innerHTML = res.data.map(job => `
             <div class="bg-white border-2 border-ink p-6 shadow-[4px_4px_0_0_#0b0b0b] flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-2">
-                        <h3 class="font-black text-xl uppercase tracking-tighter">${job.title}</h3>
+                    <div class="flex items-center gap-3 mb-2 flex-wrap">
+                        <a href="/jobs/${job.jobId}" class="nav-link hover:underline decoration-4 underline-offset-4">
+                            <h3 class="font-black text-xl uppercase tracking-tighter">${job.title}</h3>
+                        </a>
                         <span class="border-2 border-ink px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${job.status === 'active' ? 'bg-green-200' : job.status === 'closed' ? 'bg-gray-200' : 'bg-yellow-200'}">${job.status}</span>
                         <span class="border-2 border-ink px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${job.visibility === 'listed' ? 'bg-cyan' : 'bg-white'}">${job.visibility}</span>
                     </div>
                     <p class="font-mono text-xs text-gray-500">${job.location || 'Remote'} · ${job.applicationCount || 0} applications · Created ${new Date(job.createdAt).toLocaleDateString()}</p>
                 </div>
-                <div class="flex gap-2">
-                    <a href="/kanban/${job.jobId}" class="nav-link font-mono text-[10px] font-bold uppercase bg-ink text-white border-2 border-ink px-3 py-1.5 hover:bg-cyan hover:text-ink transition-colors duration-0">Pipeline</a>
-                    <a href="/jobs/${job.jobId}" class="nav-link font-mono text-[10px] font-bold uppercase bg-white text-ink border-2 border-ink px-3 py-1.5 hover:bg-ink hover:text-white transition-colors duration-0">View</a>
+                <div class="flex gap-2 flex-wrap">
+                    <button data-link="${origin}/jobs/${job.jobId}" class="copy-link-btn font-mono text-[10px] font-bold uppercase bg-white text-ink border-2 border-ink px-3 py-1.5 hover:bg-cyan hover:text-ink transition-colors duration-0 flex items-center gap-1">
+                        Copy Link
+                    </button>
+                    <a href="/jobs/${job.jobId}" class="nav-link font-mono text-[10px] font-bold uppercase bg-white text-ink border-2 border-ink px-3 py-1.5 hover:bg-ink hover:text-white transition-colors duration-0">Job Page</a>
+                    <a href="/kanban/${job.jobId}" class="nav-link font-mono text-[10px] font-bold uppercase bg-ink text-white border-2 border-ink px-3 py-1.5 hover:bg-cyan hover:text-ink transition-colors duration-0">Applicants</a>
                 </div>
             </div>
         `).join('');
+
+        // Attach copy link event listeners
+        const copyBtns = container.querySelectorAll('.copy-link-btn');
+        copyBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = btn.getAttribute('data-link');
+                navigator.clipboard.writeText(link).then(() => {
+                    showToast('Job link copied!');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            });
+        });
     }
     load();
 }

@@ -2,6 +2,8 @@ export function setupFormValidation(formElement, onSubmit) {
     const inputs = formElement.querySelectorAll('input[required], textarea[required], select[required]');
     const submitBtn = formElement.querySelector('[type="submit"], .submit-btn');
 
+    let formTouched = false;
+
     function checkValidity() {
         let isValid = true;
         inputs.forEach(input => {
@@ -13,14 +15,14 @@ export function setupFormValidation(formElement, onSubmit) {
         if (submitBtn) {
             submitBtn.disabled = !isValid;
             
-            // "An error indicator is also shown near the submit/confirm button."
             let globalErrorEl = document.getElementById('global-submit-error');
-            if (!isValid) {
+            // Only show global error after the user has interacted with the form
+            if (!isValid && formTouched) {
                 if (!globalErrorEl) {
                     globalErrorEl = document.createElement('p');
                     globalErrorEl.id = 'global-submit-error';
                     globalErrorEl.className = 'text-danger font-mono text-[10px] mt-2 font-bold uppercase text-center';
-                    globalErrorEl.textContent = 'Please fill out all required fields correctly to proceed.';
+                    globalErrorEl.textContent = '* Complete all required fields to proceed';
                     submitBtn.parentNode.insertBefore(globalErrorEl, submitBtn.nextSibling);
                 }
             } else {
@@ -38,6 +40,7 @@ export function setupFormValidation(formElement, onSubmit) {
 
         // On Blur Validation
         input.addEventListener('blur', () => {
+            formTouched = true;
             checkValidity();
             
             // Error indicator immediately
@@ -59,7 +62,10 @@ export function setupFormValidation(formElement, onSubmit) {
             }
         });
         
-        input.addEventListener('input', checkValidity);
+        input.addEventListener('input', () => {
+            formTouched = true;
+            checkValidity();
+        });
     });
 
     // Character Count for textareas
