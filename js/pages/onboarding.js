@@ -5,6 +5,9 @@ import { renderButtonSpinner } from '../components/skeleton.js';
 import { showToast, showModal } from '../components/notifications.js';
 
 export async function renderOnboarding() {
+    const { currentUser } = await import('../app.js');
+    const headline = currentUser?.headline || '';
+    const location = currentUser?.currentLocation || '';
     return `
         <div class="max-w-2xl mx-auto mt-10">
             <div class="bg-white border-4 border-ink shadow-[12px_12px_0_0_#0b0b0b] p-0">
@@ -31,11 +34,11 @@ export async function renderOnboarding() {
                     <div id="applier-fields">
                         <div class="mb-6">
                             <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">Headline</label>
-                            <input id="onboard-headline" type="text" placeholder="e.g. Senior Backend Engineer" class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan" required>
+                            <input id="onboard-headline" type="text" placeholder="e.g. Senior Backend Engineer" class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan" value="${headline}" required>
                         </div>
                         <div class="mb-6">
                             <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">Location</label>
-                            <input id="onboard-location" type="text" placeholder="e.g. Mumbai, India" class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan" required>
+                            <input id="onboard-location" type="text" placeholder="e.g. Mumbai, India" class="w-full border-2 border-ink px-4 py-2 font-mono text-sm focus:outline-none focus:border-cyan" value="${location}" required>
                         </div>
                         <div class="mb-6">
                             <label class="block font-mono text-xs font-bold uppercase tracking-widest mb-2">Years of Experience</label>
