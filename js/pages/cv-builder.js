@@ -38,7 +38,7 @@ export async function renderCvBuilder(skipFetch = false) {
             <button id="cv-export-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-[#5ce1e6] text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📄 Export PDF</button>
             <button id="cv-upload-btn" class="font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">📤 Import PDF</button>
             <input type="file" id="cv-pdf-input" accept=".pdf" class="hidden">
-            <a href="/dashboard" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">← Dashboard</a>
+            <a href="#" onclick="event.preventDefault(); window.history.length > 2 ? window.history.back() : window.location.href='/dashboard'" class="nav-link font-mono text-xs font-bold uppercase tracking-widest bg-white text-black border-2 border-black px-6 py-3 shadow-[4px_4px_0_0_#0b0b0b] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#0b0b0b] transition-all duration-75">← Go Back</a>
         </div>
         <p id="cv-status" class="mb-4 font-mono text-xs font-bold hidden"></p>
 

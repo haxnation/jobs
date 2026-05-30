@@ -9,8 +9,8 @@ export async function renderJobCreate() {
         <div class="max-w-2xl mx-auto mt-10">
             <div class="bg-white border-4 border-ink shadow-[12px_12px_0_0_#0b0b0b] p-0">
                 <div class="bg-ink text-white p-4 font-mono font-bold flex justify-between items-center border-b-4 border-ink">
+                    <a href="#" onclick="event.preventDefault(); window.history.length > 2 ? window.history.back() : window.location.href='/dashboard'" class="text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">← Go Back</a>
                     <span class="uppercase tracking-widest">Post a New Job</span>
-                    <a href="/dashboard" class="nav-link text-white hover:bg-cyan hover:text-ink px-2 py-1 transition-colors duration-0 border border-transparent hover:border-ink uppercase">[X] Cancel</a>
                 </div>
 
                 <form id="job-create-form" class="p-6 sm:p-10" novalidate>
